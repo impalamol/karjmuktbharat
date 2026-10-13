@@ -26,7 +26,7 @@ import { calculateBlockBreakdown, calculateRegularPerUser, calculateTargetTotals
 import { formatCompactINR, formatCompactNumber, formatINR, formatNumber } from '@/lib/format'
 import { fadeUp, float, reveal, staggerContainer } from '@/lib/motion'
 import { isConfigured } from '@/lib/env'
-import { cn } from '@/lib/utils'
+import { cn, scrollToSection } from '@/lib/utils'
 import { darkColors } from '@/lib/design-tokens'
 import { useThemeColors } from '@/lib/theme'
 
@@ -155,7 +155,9 @@ function Hero() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="ghost" className="w-full rounded-pill sm:w-auto">
-            <a href="#story">See how it works</a>
+            <a href="#story" onClick={(e) => scrollToSection(e, 'story')}>
+              See how it works
+            </a>
           </Button>
         </m.div>
         <m.div variants={fadeUp} className="flex flex-col items-center gap-1 pt-6">

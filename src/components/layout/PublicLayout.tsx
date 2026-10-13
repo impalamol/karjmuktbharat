@@ -6,6 +6,7 @@ import { PageSkeleton } from '@/components/states/Skeletons'
 import { ErrorBoundary } from '@/components/states/ErrorBoundary'
 import { useSession } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
+import { scrollToSection } from '@/lib/utils'
 import { ThemeToggle } from './ThemeToggle'
 import { OfflineBanner } from './OfflineBanner'
 import { AnimatedOutlet } from './AnimatedOutlet'
@@ -51,8 +52,8 @@ export function PublicLayout() {
           <nav aria-label="Product" className="flex flex-col gap-1 text-sm">
             <p className="pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Product</p>
             <Link className="inline-flex min-h-11 items-center hover:text-secondary-800" to="/onboard">{t('nav_join')}</Link>
-            <a className="inline-flex min-h-11 items-center hover:text-secondary-800" href="/#story">How it works</a>
-            <a className="inline-flex min-h-11 items-center hover:text-secondary-800" href="/#faq">FAQs</a>
+            <a className="inline-flex min-h-11 items-center hover:text-secondary-800" href="/#story" onClick={(e) => scrollToSection(e, 'story')}>How it works</a>
+            <a className="inline-flex min-h-11 items-center hover:text-secondary-800" href="/#faq" onClick={(e) => scrollToSection(e, 'faq')}>FAQs</a>
           </nav>
           <nav aria-label="Account" className="flex flex-col gap-1 text-sm">
             <p className="pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Account</p>

@@ -11,3 +11,4 @@ supabase/.temp
 supabase/.branches
 coverage
 .DS_Store
+dist-demo
