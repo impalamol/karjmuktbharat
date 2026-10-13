@@ -5,7 +5,7 @@ import { LazyMotion, MotionConfig } from 'framer-motion'
 import { queryClient } from '@/lib/queryClient'
 import { isConfigured } from '@/lib/env'
 import { useAuthBootstrap } from '@/hooks/useAuth'
-import { useUiStore } from '@/stores/ui'
+import { applyTheme, useUiStore } from '@/stores/ui'
 import { useT } from '@/i18n'
 import { AppShell } from '@/components/layout/AppShell'
 import { PublicLayout } from '@/components/layout/PublicLayout'
@@ -51,11 +51,9 @@ const router = createBrowserRouter([
 
 function Boot() {
   useAuthBootstrap()
-  const lang = useUiStore((s) => s.lang)
+  const theme = useUiStore((s) => s.theme)
   const t = useT()
-  useEffect(() => {
-    document.documentElement.lang = lang === 'mr' ? 'mr' : 'en'
-  }, [lang])
+  useEffect(() => applyTheme(theme), [theme])
   return (
     <>
       {!isConfigured && (

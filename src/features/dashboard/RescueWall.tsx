@@ -11,14 +11,12 @@ import { useRescueWall } from '@/hooks/queries'
 import { useT } from '@/i18n'
 import { formatCompactINR, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { useUiStore } from '@/stores/ui'
 
 const ROW = 76
 
 /** Virtualized realtime wall. Rows slide in from x -20; a live rescue pops in with scale + gold glow. */
 export function RescueWall() {
   const t = useT()
-  const lang = useUiStore((s) => s.lang)
   const q = useRescueWall()
   const items = useMemo(() => q.data?.pages.flat() ?? [], [q.data])
   const parentRef = useRef<HTMLDivElement>(null)
@@ -66,7 +64,7 @@ export function RescueWall() {
                         transition={isNew ? { type: 'spring', stiffness: 400, damping: 18 } : { duration: 0.35, ease: 'easeOut', delay: Math.min(0.4, (v.index - firstIndex) * 0.05) }}
                         className={cn(
                           'flex h-full items-center gap-3 rounded-modal border px-3 transition-colors',
-                          isNew ? 'animate-gold-glow border-secondary bg-secondary-50' : 'border-transparent hover:border-border hover:bg-white',
+                          isNew ? 'animate-gold-glow border-secondary bg-secondary-50' : 'border-transparent hover:border-border hover:bg-card',
                         )}
                       >
                         <div className={cn('flex size-11 shrink-0 items-center justify-center rounded-pill', r.loan_type === 'education' ? 'bg-primary-50 text-primary' : 'bg-secondary-50 text-secondary-800')}>
@@ -77,7 +75,7 @@ export function RescueWall() {
                             {r.display_name}
                             {isNew && <Sparkles className="size-3 text-secondary-800" aria-label={t('live_label')} />}
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">{r.story ?? formatDate(r.saved_at, lang)}</p>
+                          <p className="truncate text-xs text-muted-foreground">{r.story ?? formatDate(r.saved_at)}</p>
                         </div>
                         <Badge variant="success" className="shrink-0 tabular">
                           {formatCompactINR(r.rescue_amount)}

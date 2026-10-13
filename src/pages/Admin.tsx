@@ -39,7 +39,7 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>('verify')
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('admin_title')}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">{t('admin_title')}</h1>
       <div role="tablist" aria-label={t('admin_title')} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
         {TABS.map(({ id, label, icon: Icon }) => (
           <Button

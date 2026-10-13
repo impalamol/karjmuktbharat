@@ -16,7 +16,7 @@ At 25 lakh users the platform moves ₹2,500 Cr per month and rescues 33,000 fam
 
 ## Stack
 
-React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, Zustand, TanStack Query and Virtual, Recharts, Zod. The backend is Supabase (Postgres, Auth, Realtime Broadcast, Storage, Edge Functions, Supavisor/PgBouncer). Payments use Razorpay eMandate and RazorpayX payouts, in test mode. The app ships as a PWA through vite-plugin-pwa and deploys on Vercel Edge.
+React 18, Vite, TypeScript, Tailwind CSS (CSS-variable dark and light themes), shadcn/ui, Framer Motion, Zustand, TanStack Query and Virtual, Recharts, Zod. The backend is Supabase (Postgres, Auth, Realtime Broadcast, Storage, Edge Functions, Supavisor/PgBouncer). Payments use Razorpay eMandate and RazorpayX payouts, in test mode. The app ships as a PWA through vite-plugin-pwa and deploys on Vercel Edge.
 
 ## Project layout
 

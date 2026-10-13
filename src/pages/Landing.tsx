@@ -1,338 +1,700 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { m, useScroll, useTransform, useReducedMotion } from 'framer-motion'
-import { ArrowRight, BadgeCheck, GraduationCap, HeartHandshake, Home as HomeIcon, Landmark, Lock, ShieldCheck, Smartphone, Sparkles, Users } from 'lucide-react'
+import { m, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import {
+  ArrowRight,
+  BadgeCheck,
+  Fingerprint,
+  Gift,
+  GraduationCap,
+  HeartHandshake,
+  Home as HomeIcon,
+  Landmark,
+  Lock,
+  ReceiptText,
+  ShieldCheck,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SpringCounter } from '@/components/brand/SpringCounter'
-import { ErrorState } from '@/components/states/ErrorState'
 import { usePlatformStats } from '@/hooks/queries'
-import { useT } from '@/i18n'
-import { calculateBlockBreakdown, calculateRegularPerUser, calculateTargetTotals, type BlockType } from '@/lib/calculations'
+import { calculateBlockBreakdown, calculateRegularPerUser, calculateTargetTotals } from '@/lib/calculations'
 import { formatCompactINR, formatCompactNumber, formatINR, formatNumber } from '@/lib/format'
 import { fadeUp, float, reveal, staggerContainer } from '@/lib/motion'
 import { isConfigured } from '@/lib/env'
+import { cn } from '@/lib/utils'
+import { darkColors } from '@/lib/design-tokens'
+import { useThemeColors } from '@/lib/theme'
 
 const HERO_YEARS = 7
+const edu = calculateBlockBreakdown('education')
+const home = calculateBlockBreakdown('home')
 
+/**
+ * CRED-inspired landing: a dark editorial page (with a light theme) built from
+ * full-bleed sections, serif display type and scroll-linked motion.
+ */
 export default function Landing() {
   return (
-    <>
+    <div className="-mt-14 md:-mt-16">
       <Hero />
-      <LivePool />
-      <HowItWorks />
-      <TrustBadges />
-    </>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Hero: animated gradient mesh (20s drift) + parallax + staggered copy + floating cards + spring counter
-// ---------------------------------------------------------------------------
-function GradientMesh() {
-  const reduce = useReducedMotion()
-  const drift = (x: string[], y: string[]) =>
-    reduce ? {} : { animate: { x, y }, transition: { duration: 20, repeat: Infinity, repeatType: 'mirror' as const, ease: 'easeInOut' } }
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <m.div
-        className="absolute -left-1/4 -top-1/4 size-[70vmax] rounded-pill opacity-60 blur-3xl"
-        style={{ background: 'radial-gradient(circle, #1D4A91 0%, transparent 60%)' }}
-        {...drift(['0%', '20%', '-5%'], ['0%', '10%', '25%'])}
-      />
-      <m.div
-        className="absolute -right-1/4 top-0 size-[55vmax] rounded-pill opacity-40 blur-3xl"
-        style={{ background: 'radial-gradient(circle, #FFB703 0%, transparent 60%)' }}
-        {...drift(['0%', '-25%', '-10%'], ['0%', '20%', '5%'])}
-      />
-      <m.div
-        className="absolute -bottom-1/3 left-1/4 size-[50vmax] rounded-pill opacity-30 blur-3xl"
-        style={{ background: 'radial-gradient(circle, #059669 0%, transparent 60%)' }}
-        {...drift(['0%', '15%', '-20%'], ['0%', '-15%', '-5%'])}
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.08)_1px,transparent_1px)] [background-size:24px_24px]" />
+      <Manifesto />
+      <Showcase />
+      <PoolRing />
+      <Products />
+      <Rescue />
+      <Security />
+      <Proof />
+      <Door />
+      <Faq />
     </div>
   )
 }
 
-function FloatingLoanCard({ icon: Icon, title, value, sub, delay, className }: { icon: typeof GraduationCap; title: string; value: string; sub: string; delay: number; className?: string }) {
+// ---------------------------------------------------------------------------
+// Shared pieces
+// ---------------------------------------------------------------------------
+function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <p className={cn('text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground', className)}>{children}</p>
+}
+
+function Display({ children, className, as: Tag = 'h2', id }: { children: React.ReactNode; className?: string; as?: 'h1' | 'h2'; id?: string }) {
   return (
-    <m.div {...float(delay)} className={className}>
-      <div className="flex w-56 flex-col gap-2 rounded-modal border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-lg backdrop-blur-xl [transform:perspective(800px)_rotateY(-8deg)_rotateX(4deg)]">
-        <div className="flex items-center gap-2 text-sm text-primary-100">
-          <span className="flex size-8 items-center justify-center rounded-pill bg-secondary text-secondary-foreground">
-            <Icon className="size-4" aria-hidden />
+    <Tag id={id} className={cn('font-display font-semibold tracking-tight text-foreground', className)}>
+      {children}
+    </Tag>
+  )
+}
+
+/** Paragraph whose words light up one by one as it scrolls through the viewport. */
+function ScrollText({ text, className }: { text: string; className?: string }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.5'] })
+  const words = text.split(' ')
+  return (
+    <p ref={ref} className={cn('flex flex-wrap font-display', className)}>
+      {words.map((w, i) => (
+        <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} still={!!reduce}>
+          {w}
+        </Word>
+      ))}
+    </p>
+  )
+}
+
+function Word({ progress, range, still, children }: { progress: MotionValue<number>; range: [number, number]; still: boolean; children: string }) {
+  const opacity = useTransform(progress, range, still ? [1, 1] : [0.18, 1])
+  return (
+    <m.span style={{ opacity }} className="mr-[0.28em]">
+      {children}
+    </m.span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 1. Hero: corridor of light, serif headline, parallax, spring counter
+// ---------------------------------------------------------------------------
+function Corridor() {
+  const pillars = 'repeating-linear-gradient(90deg, rgb(var(--neutral-200)) 0 34px, rgb(var(--neutral-100)) 34px 40px, transparent 40px 78px)'
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [perspective:900px]">
+      <div className="absolute inset-y-0 left-0 w-1/2 origin-left [transform:rotateY(62deg)]" style={{ backgroundImage: pillars }} />
+      <div className="absolute inset-y-0 right-0 w-1/2 origin-right [transform:rotateY(-62deg)]" style={{ backgroundImage: pillars }} />
+      <m.div
+        className="absolute bottom-0 left-1/2 h-3/4 w-2/3 -translate-x-1/2 bg-[radial-gradient(50%_60%_at_50%_100%,rgb(255_183_3/0.35),transparent)]"
+        animate={{ opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(40%_50%_at_50%_45%,transparent,rgb(var(--background))_85%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-background" />
+    </div>
+  )
+}
+
+function Hero() {
+  const ref = useRef<HTMLElement>(null)
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
+  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 160])
+  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
+  const heroTotal = calculateRegularPerUser('education') * 12 * HERO_YEARS
+
+  return (
+    <section ref={ref} className="relative isolate flex min-h-dvh items-center overflow-hidden pt-16" aria-labelledby="hero-title">
+      <Corridor />
+      <m.div style={{ y, opacity }} className="container relative flex flex-col items-center gap-6 py-16 text-center" initial="hidden" animate="show" variants={staggerContainer(0.1, 0.1)}>
+        <m.div variants={fadeUp}>
+          <Badge variant="outline" className="gap-2 rounded-pill border-border/60 bg-background/40 px-4 py-1 backdrop-blur-xl">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-accent opacity-75" />
+              <span className="relative inline-flex size-2 rounded-pill bg-accent" />
+            </span>
+            Karj Se Mukti, Bharat Ki Pragati
+          </Badge>
+        </m.div>
+        <m.div variants={fadeUp}>
+          <Display as="h1" id="hero-title" className="max-w-4xl text-6xl lg:text-7xl">
+            crafted for those
+            <br />
+            <span className="bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">who repay.</span>
+          </Display>
+        </m.div>
+        <m.p variants={fadeUp} className="max-w-xl text-base text-muted-foreground md:text-lg">
+          KARJMUKTBHARAT is a members-only community of verified borrowers. Together with CSR partners, we pay your education or home loan down
+          every month, straight into your bank loan account.
+        </m.p>
+        <m.div variants={fadeUp} className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button asChild size="lg" variant="glow" className="w-full rounded-pill sm:w-auto">
+            <Link to="/onboard">
+              Join your block <ArrowRight aria-hidden />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="ghost" className="w-full rounded-pill sm:w-auto">
+            <a href="#story">See how it works</a>
+          </Button>
+        </m.div>
+        <m.div variants={fadeUp} className="flex flex-col items-center gap-1 pt-6">
+          <SpringCounter value={heroTotal} format={formatINR} className="font-display text-4xl font-semibold tabular text-secondary-800 md:text-5xl" />
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            extra paid into an education loan over {HERO_YEARS} years
           </span>
-          {title}
-        </div>
-        <p className="text-2xl font-bold tabular">{value}</p>
-        <p className="text-xs text-primary-100">{sub}</p>
+        </m.div>
+      </m.div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 2. Manifesto: words light up on scroll
+// ---------------------------------------------------------------------------
+function Manifesto() {
+  return (
+    <section id="story" className="scroll-mt-16 py-16" aria-label="Our story">
+      <div className="container flex max-w-4xl flex-col gap-8">
+        <Eyebrow>not every loan should take a lifetime.</Eyebrow>
+        <ScrollText
+          className="text-3xl leading-tight md:text-5xl"
+          text="the story of karjmuktbharat begins with trust. we believe people who repay their loans every month deserve better: shorter loans, less interest, and a community that has their back. one block. one thousand borrowers. one crore every month. this is the status quo we're breaking."
+        />
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 3. Showcase: three phones fan out on scroll
+// ---------------------------------------------------------------------------
+function PhoneScreen({ variant }: { variant: 'loan' | 'block' | 'proof' }) {
+  return (
+    <div className="dark flex h-full flex-col gap-3 bg-background p-4 text-foreground">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>9:41</span>
+        <span className="font-semibold text-secondary">KARJMUKT</span>
+      </div>
+      {variant === 'loan' && (
+        <>
+          <p className="text-xs text-muted-foreground">loan closed</p>
+          <div className="relative mx-auto size-24">
+            <svg viewBox="0 0 100 100" className="size-24 -rotate-90" aria-hidden>
+              <circle cx="50" cy="50" r="42" fill="none" stroke={darkColors.neutral[200]} strokeWidth="8" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke={darkColors.accent[700]} strokeWidth="8" strokeLinecap="round" strokeDasharray="264" strokeDashoffset="160" />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold">39%</span>
+          </div>
+          <div className="rounded-card bg-neutral-100 p-3">
+            <p className="text-xs text-muted-foreground">interest saved</p>
+            <p className="text-lg font-bold text-accent-700">₹1,61,158</p>
+          </div>
+          <div className="rounded-card bg-neutral-100 p-3">
+            <p className="text-xs text-muted-foreground">next credit</p>
+            <p className="text-lg font-bold">+₹3,200</p>
+          </div>
+        </>
+      )}
+      {variant === 'block' && (
+        <>
+          <p className="text-xs text-muted-foreground">block #42 · 640 / 1,000</p>
+          <div className="grid grid-cols-8 gap-1">
+            {Array.from({ length: 64 }, (_, i) => (
+              <span key={i} className={cn('aspect-square rounded-pill', i === 27 ? 'bg-secondary' : i < 41 ? 'bg-primary-500' : 'border border-dashed border-neutral-400')} />
+            ))}
+          </div>
+          <div className="rounded-card bg-neutral-100 p-3">
+            <p className="text-xs text-muted-foreground">rescued this month</p>
+            <p className="text-lg font-bold">22 students</p>
+          </div>
+        </>
+      )}
+      {variant === 'proof' && (
+        <>
+          <p className="text-xs text-muted-foreground">payment proof</p>
+          {[3200, 3200, 1500, 3200, 3200].map((a, i) => (
+            <div key={i} className="flex items-center justify-between rounded-card bg-neutral-100 px-3 py-2 text-xs">
+              <span className="font-mono text-muted-foreground">UTR ···{4821 + i}</span>
+              <span className={a === 1500 ? 'font-semibold' : 'font-semibold text-accent-700'}>{a === 1500 ? '-' : '+'}₹{a.toLocaleString('en-IN')}</span>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
+function Phone({ variant, className, style }: { variant: 'loan' | 'block' | 'proof'; className?: string; style?: React.ComponentProps<typeof m.div>['style'] }) {
+  return (
+    <m.div
+      style={style}
+      className={cn('absolute aspect-[9/19] w-48 overflow-hidden rounded-[2.25rem] border-[6px] border-neutral-800 bg-black shadow-lg ring-1 ring-white/10 md:w-56', className)}
+    >
+      <div className="absolute left-1/2 top-2 z-10 h-4 w-16 -translate-x-1/2 rounded-pill bg-black" />
+      <div className="h-full pt-6">
+        <PhoneScreen variant={variant} />
       </div>
     </m.div>
   )
 }
 
-function Hero() {
-  const t = useT()
+function Showcase() {
   const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']) // background moves slower than content
-  const fgY = useTransform(scrollYProgress, [0, 1], ['0%', '-8%'])
-
-  const eduExtra = calculateRegularPerUser('education')
-  const homeExtra = calculateRegularPerUser('home')
-  const heroTotal = eduExtra * 12 * HERO_YEARS
-  const edu = calculateBlockBreakdown('education')
-  const home = calculateBlockBreakdown('home')
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
+  const spread = useTransform(scrollYProgress, [0, 1], [0, reduce ? 1 : 1])
+  const leftX = useTransform(spread, [0, 1], ['-10%', '-78%'])
+  const rightX = useTransform(spread, [0, 1], ['10%', '78%'])
+  const sideRotate = useTransform(scrollYProgress, [0, 1], [0, 12])
+  const negRotate = useTransform(sideRotate, (r) => -r)
+  const centerY = useTransform(scrollYProgress, [0, 1], [80, 0])
 
   return (
-    <section ref={ref} className="relative isolate overflow-hidden bg-primary text-primary-foreground">
-      <m.div style={{ y: bgY }} className="absolute inset-0 -z-10">
-        <GradientMesh />
-      </m.div>
-      <m.div style={{ y: fgY }} className="container grid items-center gap-12 py-12 md:py-16 lg:grid-cols-2 lg:py-20">
-        <m.div initial="hidden" animate="show" variants={staggerContainer(0.1, 0.1)} className="flex flex-col gap-6">
+    <section ref={ref} className="relative overflow-hidden py-16" aria-labelledby="showcase-title">
+      <div className="container flex flex-col items-center gap-12">
+        <div aria-hidden className="relative h-[460px] w-full max-w-md md:h-[540px]">
+          <div className="absolute inset-0 flex justify-center">
+            <Phone variant="proof" className="top-8 opacity-80" style={{ x: leftX, rotate: negRotate }} />
+            <Phone variant="block" className="top-8 opacity-80" style={{ x: rightX, rotate: sideRotate }} />
+            <Phone variant="loan" className="z-10 shadow-[0_40px_80px_-20px_rgb(255_183_3/0.35)]" style={{ y: centerY }} />
+          </div>
+        </div>
+        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex max-w-2xl flex-col items-center gap-4 text-center">
           <m.div variants={fadeUp}>
-            <Badge variant="secondary" className="w-fit">
-              <Sparkles aria-hidden /> {t('motto')}
-            </Badge>
+            <Display id="showcase-title" className="text-5xl">
+              all that you deserve.
+              <br />
+              and some more.
+            </Display>
           </m.div>
-          <m.h1 variants={fadeUp} className="text-4xl font-bold leading-tight tracking-tight">
-            {t('hero_title')}
-          </m.h1>
-          <m.p variants={fadeUp} className="text-lg text-primary-100 lg:max-w-xl">
-            {t('hero_sub')}
+          <m.p variants={fadeUp} className="text-muted-foreground">
+            Once you are a member, every month moves your loan closer to zero. Watch your closure ring fill, your block grow and every rupee
+            arrive with a UTR you can verify.
           </m.p>
-          <m.div variants={fadeUp} className="flex flex-col gap-1">
-            <SpringCounter value={heroTotal} format={formatINR} className="text-4xl font-bold tabular text-secondary" />
-            <span className="text-sm text-primary-100">
-              {formatINR(eduExtra)}
-              {t('card_per_month')} × 12 × {HERO_YEARS} {t('yr')} · {t('edu_title')}
-            </span>
-          </m.div>
-          <m.p variants={fadeUp} className="font-devanagari text-base font-medium text-secondary">
-            {t('tagline')}
-          </m.p>
-          <m.div variants={fadeUp} className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" variant="glow" className="w-full sm:w-auto">
-              <Link to="/onboard">
-                {t('hero_cta')}
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="w-full text-primary-foreground hover:bg-white/10 sm:w-auto">
-              <a href="#how">{t('hero_secondary')}</a>
-            </Button>
-          </m.div>
         </m.div>
-
-        {/* Mobile: one floating card. sm+: three cards in a floating composition. */}
-        <div className="flex justify-center sm:hidden" aria-hidden>
-          <FloatingLoanCard icon={GraduationCap} title={t('edu_title')} value={`+${formatINR(eduExtra)}`} sub={`${t('card_per_month')} · ${edu.rescueCapacity} ${t('card_students')}`} delay={0} />
-        </div>
-        <div className="relative hidden h-80 sm:block lg:h-[28rem]" aria-hidden>
-          <FloatingLoanCard icon={GraduationCap} title={t('edu_title')} value={`+${formatINR(eduExtra)}`} sub={`${t('card_per_month')} · ${edu.rescueCapacity} ${t('card_students')}`} delay={0} className="absolute left-0 top-0 lg:left-8" />
-          <FloatingLoanCard icon={HomeIcon} title={t('home_title')} value={`+${formatINR(homeExtra)}`} sub={`${t('card_per_month')} · ${home.rescueCapacity} ${t('card_houses')}`} delay={1.2} className="absolute right-0 top-16 lg:right-8 lg:top-20" />
-          <FloatingLoanCard icon={HeartHandshake} title={t('live_rescued')} value={formatCompactINR(edu.rescuePool)} sub={`80% CSR · ${t('block')}`} delay={2.4} className="absolute bottom-0 left-12 lg:left-20" />
-        </div>
-      </m.div>
+      </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Live Pool: bento grid (2 large + 4 small), glass cards, numbers count up on view
+// 4. Pool ring: a slowly turning segmented ring with the block maths
 // ---------------------------------------------------------------------------
-function LivePool() {
-  const t = useT()
-  const { totals, rescued, paidOut, isLoading, isError, error, refetch, isRefetching } = usePlatformStats()
+const SEGMENTS = 48
 
-  const stats = [
-    { label: t('live_members'), value: totals.users, fmt: formatCompactNumber, icon: Users },
-    { label: t('live_blocks'), value: totals.blocks, fmt: formatNumber, icon: BadgeCheck },
-    { label: t('live_rescued'), value: rescued, fmt: formatNumber, icon: ShieldCheck },
-    { label: t('live_paid'), value: paidOut, fmt: formatCompactINR, icon: Landmark },
-  ]
-
+function PoolRing() {
+  const reduce = useReducedMotion()
+  const c = useThemeColors()
   return (
-    <section className="relative overflow-hidden py-12 md:py-16" aria-labelledby="live-pool">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_10%_0%,rgb(15_44_97/0.08),transparent),radial-gradient(40%_40%_at_90%_30%,rgb(255_183_3/0.12),transparent)]" />
-      <div className="container flex flex-col gap-8">
-        <m.div {...reveal} variants={fadeUp} className="flex flex-col gap-2">
-          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-accent-700">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-accent opacity-75" />
-              <span className="relative inline-flex size-2 rounded-pill bg-accent" />
-            </span>
-            {t('live_label')}
-          </span>
-          <h2 id="live-pool" className="text-3xl font-bold tracking-tight text-primary">
-            {t('edu_title')} + {t('home_title')}
-          </h2>
-        </m.div>
-
-        {isError ? (
-          <Card variant="glass">
-            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
-          </Card>
-        ) : (
-          <m.div {...reveal} variants={staggerContainer(0.08)} className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
-            <m.div variants={fadeUp} className="md:col-span-1 lg:col-span-2">
-              <LoanTypeCard type="education" />
-            </m.div>
-            <m.div variants={fadeUp} className="md:col-span-1 lg:col-span-2">
-              <LoanTypeCard type="home" />
-            </m.div>
-            {stats.map(({ label, value, fmt, icon: Icon }) => (
-              <m.div key={label} variants={fadeUp}>
-                <Card variant="glass" className="flex h-full flex-col gap-2 p-4 md:p-6">
-                  <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <span className="flex size-8 items-center justify-center rounded-pill bg-primary-50 text-primary">
-                      <Icon className="size-4" aria-hidden />
-                    </span>
-                    {label}
-                  </span>
-                  {isLoading && isConfigured ? <Skeleton className="h-8 w-24" /> : <SpringCounter value={value} format={fmt} className="text-3xl font-bold tabular text-primary" />}
-                </Card>
-              </m.div>
+    <section className="relative overflow-hidden py-16" aria-labelledby="ring-title">
+      <div className="container grid items-center gap-12 lg:grid-cols-2">
+        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex flex-col gap-4">
+          <m.div variants={fadeUp}>
+            <Display id="ring-title" className="text-5xl">
+              do more with
+              <br />
+              your loan.
+            </Display>
+          </m.div>
+          <m.p variants={fadeUp} className="max-w-md text-muted-foreground">
+            Every month 1,000 members and our CSR partners fill a {formatCompactINR(edu.totalPool)} block. 80% of the CSR money rescues families
+            facing auction. The rest goes straight into every member's loan account.
+          </m.p>
+          <m.dl variants={fadeUp} className="grid max-w-md grid-cols-2 gap-4 pt-2">
+            {[
+              ['Education block', `+${formatINR(edu.regularPerUser)}/mo`],
+              ['Home block', `+${formatINR(home.regularPerUser)}/mo`],
+              ['Students rescued', `${edu.rescueCapacity} per block`],
+              ['Homes rescued', `${home.rescueCapacity} per block`],
+            ].map(([k, v]) => (
+              <div key={k} className="border-l-2 border-secondary pl-3">
+                <dt className="text-xs uppercase tracking-wider text-muted-foreground">{k}</dt>
+                <dd className="text-lg font-semibold tabular">{v}</dd>
+              </div>
             ))}
-          </m.div>
-        )}
+          </m.dl>
+        </m.div>
+        <div aria-hidden className="relative mx-auto aspect-square w-full max-w-md">
+          <div className="absolute inset-[18%] rounded-pill bg-[radial-gradient(circle,rgb(255_183_3/0.18),transparent_70%)]" />
+          <m.svg viewBox="0 0 200 200" className="absolute inset-0" animate={reduce ? undefined : { rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
+            {Array.from({ length: SEGMENTS }, (_, i) => {
+              const hot = i % 12 < 3
+              return (
+                <rect
+                  key={i}
+                  x="97"
+                  y="6"
+                  width="6"
+                  height="26"
+                  rx="2"
+                  transform={`rotate(${(i * 360) / SEGMENTS} 100 100)`}
+                  fill={hot ? (i % 24 < 3 ? '#FFB703' : '#10B981') : c.neutral[300]}
+                  opacity={hot ? 1 : 0.7}
+                />
+              )
+            })}
+          </m.svg>
+          <m.svg viewBox="0 0 200 200" className="absolute inset-[16%]" animate={reduce ? undefined : { rotate: -360 }} transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}>
+            {Array.from({ length: 36 }, (_, i) => (
+              <rect key={i} x="98" y="8" width="4" height="14" rx="2" transform={`rotate(${i * 10} 100 100)`} fill={c.neutral[400]} opacity={0.5} />
+            ))}
+          </m.svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="font-display text-4xl font-semibold">₹1 Cr</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">per block, monthly</span>
+          </div>
+        </div>
       </div>
     </section>
   )
 }
 
-function LoanTypeCard({ type }: { type: BlockType }) {
-  const t = useT()
-  const b = calculateBlockBreakdown(type)
-  const target = calculateTargetTotals().byType[type]
-  const isEdu = type === 'education'
-  const Icon = isEdu ? GraduationCap : HomeIcon
+// ---------------------------------------------------------------------------
+// 5. Products: horizontal snap carousel of vivid cards
+// ---------------------------------------------------------------------------
+interface Product {
+  eyebrow: string
+  title: string
+  icon: LucideIcon
+  art: string
+  glow: string
+}
 
-  const rows = [
-    { label: t('card_you_pay'), value: b.borrowerContributionPerUser, suffix: t('card_per_month'), fmt: formatINR },
-    { label: t('card_you_get'), value: b.regularPerUser, suffix: t('card_per_month'), fmt: formatINR, highlight: true },
-    { label: t('card_rescues'), value: b.rescueCapacity, suffix: ` ${isEdu ? t('card_students') : t('card_houses')}`, fmt: formatNumber },
-    { label: t('card_target'), value: target.users, suffix: '', fmt: formatCompactNumber },
-  ]
+const PRODUCTS: Product[] = [
+  {
+    eyebrow: 'education block',
+    title: `+${formatINR(edu.regularPerUser)} every month into your education loan`,
+    icon: GraduationCap,
+    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#C026D3,#4C0D5C_55%,#0A0A0C)]',
+    glow: 'shadow-[0_0_60px_rgb(192_38_211/0.6)]',
+  },
+  {
+    eyebrow: 'home block',
+    title: `+${formatINR(home.regularPerUser)} every month into your home loan`,
+    icon: HomeIcon,
+    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#7C3AED,#2E1065_55%,#0A0A0C)]',
+    glow: 'shadow-[0_0_60px_rgb(124_58_237/0.6)]',
+  },
+  {
+    eyebrow: 'rescue fund',
+    title: '80% of CSR money saves families from auction',
+    icon: HeartHandshake,
+    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#10B981,#064E3B_55%,#0A0A0C)]',
+    glow: 'shadow-[0_0_60px_rgb(16_185_129/0.6)]',
+  },
+  {
+    eyebrow: 'direct to bank',
+    title: 'no wallet. every rupee lands with a UTR',
+    icon: ReceiptText,
+    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#2563EB,#172554_55%,#0A0A0C)]',
+    glow: 'shadow-[0_0_60px_rgb(37_99_235/0.6)]',
+  },
+  {
+    eyebrow: 'diwali draw',
+    title: 'one member wins an EMI paid in full',
+    icon: Gift,
+    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#F59E0B,#78350F_55%,#0A0A0C)]',
+    glow: 'shadow-[0_0_60px_rgb(245_158_11/0.6)]',
+  },
+]
 
+function Products() {
   return (
-    <Card variant="glass" className="h-full overflow-hidden">
-      <CardHeader className="flex-row items-center gap-4">
-        <div className={isEdu ? 'flex size-12 items-center justify-center rounded-modal bg-primary text-secondary shadow-md' : 'flex size-12 items-center justify-center rounded-modal bg-secondary text-primary shadow-md'}>
-          <Icon className="size-6" aria-hidden />
-        </div>
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-xl">{isEdu ? t('edu_title') : t('home_title')}</CardTitle>
-          <CardDescription className="font-devanagari">{isEdu ? t('edu_sub') : t('home_sub')}</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex h-3 w-full overflow-hidden rounded-pill bg-muted" role="img" aria-label={`Borrower ${formatCompactINR(b.borrowerPool)}, CSR ${formatCompactINR(b.csrPool)}`}>
-          <m.div className="bg-primary" initial={{ width: 0 }} whileInView={{ width: `${(b.borrowerPool / b.totalPool) * 100}%` }} viewport={{ once: true }} transition={{ duration: 1.2, ease: 'easeInOut' }} />
-          <m.div className="bg-secondary" initial={{ width: 0 }} whileInView={{ width: `${(b.csrPool / b.totalPool) * 100}%` }} viewport={{ once: true }} transition={{ duration: 1.2, ease: 'easeInOut', delay: 0.3 }} />
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Borrower {formatCompactINR(b.borrowerPool)}</span>
-          <span>CSR {formatCompactINR(b.csrPool)}</span>
-        </div>
-        <dl className="grid grid-cols-2 gap-3">
-          {rows.map((r) => (
-            <div key={r.label} className={r.highlight ? 'rounded-card bg-accent-50 p-3' : 'rounded-card bg-neutral-100/80 p-3'}>
-              <dt className="text-xs text-muted-foreground">{r.label}</dt>
-              <dd className={r.highlight ? 'text-lg font-bold tabular text-accent-700' : 'text-lg font-semibold tabular'}>
-                <SpringCounter value={r.value} format={r.fmt} />
-                {r.suffix}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <p className="text-xs text-muted-foreground">
-          1 {t('block')} = 1,000 · {formatCompactINR(b.totalPool)}{t('card_per_month')} · 80% CSR ({formatCompactINR(b.rescuePool)}) → {b.rescueCapacity}{' '}
-          {isEdu ? t('card_students') : t('card_houses')} · {formatCompactNumber(target.users)}: {formatNumber(target.rescueCapacity)}
-          {t('card_per_month')}
-        </p>
-      </CardContent>
-    </Card>
+    <section className="py-16" aria-labelledby="products-title">
+      <div className="container flex flex-col gap-8">
+        <m.div {...reveal} variants={fadeUp}>
+          <Display id="products-title" className="text-5xl">
+            pay it off.
+            <br />
+            bit by bit.
+          </Display>
+        </m.div>
+      </div>
+      <m.ul
+        {...reveal}
+        variants={staggerContainer(0.1)}
+        className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 md:px-6 xl:px-8 2xl:px-[calc((100vw_-_1440px)/2_+_2rem)]"
+        aria-label="What members get"
+      >
+        {PRODUCTS.map((p, i) => (
+          <m.li key={p.eyebrow} variants={fadeUp} className="shrink-0 snap-start">
+            <m.div
+              whileHover={{ y: -8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              className={cn('dark relative flex h-[420px] w-64 flex-col overflow-hidden rounded-modal border border-white/10 p-6 text-foreground md:w-80', p.art)}
+            >
+              <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+                <p.icon className="size-4" aria-hidden /> {p.eyebrow}
+              </span>
+              <p className="pt-4 text-xl font-semibold leading-snug text-white">{p.title}</p>
+              <Link to="/onboard" className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80 hover:text-white">
+                know more <ArrowRight className="size-3" aria-hidden />
+              </Link>
+              <m.div {...float(i * 0.4)} className="mt-auto flex justify-center">
+                <span className={cn('flex size-24 items-center justify-center rounded-pill border border-white/20 bg-white/10 backdrop-blur-xl', p.glow)}>
+                  <p.icon className="size-10 text-white" aria-hidden />
+                </span>
+              </m.div>
+            </m.div>
+          </m.li>
+        ))}
+      </m.ul>
+    </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// How it works: scroll-triggered stagger
+// 6. Rescue: floating spheres + live counters
 // ---------------------------------------------------------------------------
-function HowItWorks() {
-  const t = useT()
-  const steps = [
-    { title: t('how_1_t'), desc: t('how_1_d'), icon: BadgeCheck },
-    { title: t('how_2_t'), desc: t('how_2_d'), icon: Users },
-    { title: t('how_3_t'), desc: t('how_3_d'), icon: Landmark },
+const SPHERES = [
+  { size: 'size-24 md:size-48', pos: 'left-[-4%] top-[8%]', delay: 0 },
+  { size: 'size-16 md:size-24', pos: 'left-[22%] top-[2%]', delay: 0.8 },
+  { size: 'size-20 md:size-48', pos: 'right-[-2%] top-[4%]', delay: 0.4 },
+  { size: 'size-10 md:size-16', pos: 'right-[24%] top-[18%]', delay: 1.6 },
+  { size: 'size-20 md:size-48', pos: 'left-[6%] bottom-[2%]', delay: 1.2 },
+  { size: 'size-24 md:size-48', pos: 'right-[4%] bottom-[-6%]', delay: 2 },
+]
+
+function Rescue() {
+  const ref = useRef<HTMLElement>(null)
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const y = useTransform(scrollYProgress, [0, 1], [reduce ? 0 : 60, reduce ? 0 : -60])
+  const { totals, rescued, paidOut, isLoading } = usePlatformStats()
+  const stats = [
+    { label: 'members', value: totals.users, fmt: formatCompactNumber, icon: Users },
+    { label: 'blocks', value: totals.blocks, fmt: formatNumber, icon: BadgeCheck },
+    { label: 'families rescued', value: rescued, fmt: formatNumber, icon: ShieldCheck },
+    { label: 'paid to loan accounts', value: paidOut, fmt: formatCompactINR, icon: Landmark },
   ]
+
   return (
-    <section id="how" className="scroll-mt-16 bg-card py-12 md:py-16" aria-labelledby="how-title">
-      <div className="container flex flex-col gap-8 md:gap-12">
-        <m.h2 {...reveal} variants={fadeUp} id="how-title" className="text-3xl font-bold tracking-tight text-primary md:text-center">
-          {t('how_title')}
-        </m.h2>
-        <m.ol {...reveal} variants={staggerContainer(0.15)} className="relative grid gap-4 md:grid-cols-3 md:gap-6">
+    <section ref={ref} className="relative isolate overflow-hidden py-16" aria-labelledby="rescue-title">
+      <m.div aria-hidden style={{ y }} className="pointer-events-none absolute inset-0 -z-10">
+        {SPHERES.map((s, i) => (
           <m.span
-            aria-hidden
-            className="absolute left-8 right-8 top-12 hidden h-px origin-left bg-gradient-to-r from-primary via-secondary to-accent md:block"
-            variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 1.2, ease: 'easeInOut' } } }}
+            key={i}
+            {...float(s.delay)}
+            className={cn(
+              'absolute rounded-pill bg-[radial-gradient(circle_at_30%_25%,rgb(255_255_255/0.95),rgb(var(--neutral-400))_35%,rgb(var(--neutral-200))_70%,rgb(var(--neutral-100)))] shadow-lg',
+              s.size,
+              s.pos,
+            )}
           />
-          {steps.map((s, i) => (
-            <m.li key={s.title} variants={fadeUp} className="relative">
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-12 items-center justify-center rounded-pill bg-primary text-lg font-bold text-secondary shadow-md">{i + 1}</span>
-                    <s.icon className="size-6 text-primary" aria-hidden />
-                  </div>
-                  <CardTitle className="pt-2">{s.title}</CardTitle>
-                  <CardDescription>{s.desc}</CardDescription>
-                </CardHeader>
-              </Card>
-            </m.li>
-          ))}
-        </m.ol>
-      </div>
-    </section>
-  )
-}
-
-function TrustBadges() {
-  const t = useT()
-  const badges = [
-    { title: t('trust_direct'), desc: t('trust_direct_d'), icon: Landmark },
-    { title: t('trust_secure'), desc: t('trust_secure_d'), icon: Lock },
-    { title: t('trust_pwa'), desc: t('trust_pwa_d'), icon: Smartphone },
-  ]
-  return (
-    <section className="container flex flex-col gap-8 py-12 md:py-16" aria-label="Trust">
-      <m.div {...reveal} variants={staggerContainer(0.1)} className="grid gap-4 sm:grid-cols-3">
-        {badges.map((b) => (
-          <m.div key={b.title} variants={fadeUp}>
-            <Card className="flex h-full items-start gap-3 p-4">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-accent-50 text-accent-700">
-                <b.icon className="size-6" aria-hidden />
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="font-semibold">{b.title}</p>
-                <p className="text-sm text-muted-foreground">{b.desc}</p>
-              </div>
-            </Card>
-          </m.div>
         ))}
       </m.div>
-      <div className="flex justify-center">
-        <Button asChild size="lg">
-          <Link to="/onboard">
-            {t('hero_cta')}
-            <ArrowRight aria-hidden />
-          </Link>
-        </Button>
+      <div className="container flex flex-col items-center gap-8 py-16 text-center">
+        <m.div {...reveal} variants={fadeUp}>
+          <Display id="rescue-title" className="text-6xl">
+            feel the odds fall
+            <br />
+            in your favour.
+          </Display>
+        </m.div>
+        <m.p {...reveal} variants={fadeUp} className="max-w-lg text-muted-foreground">
+          When a member's home or degree is at risk, the block steps in. Every month each block rescues {edu.rescueCapacity} students or{' '}
+          {home.rescueCapacity} homes before the bank's deadline.
+        </m.p>
+        <m.dl {...reveal} variants={staggerContainer(0.08)} className="grid w-full max-w-4xl grid-cols-2 gap-4 md:grid-cols-4">
+          {stats.map(({ label, value, fmt, icon: Icon }) => (
+            <m.div key={label} variants={fadeUp} className="flex flex-col items-center gap-2 rounded-modal border border-border/60 bg-glass/70 p-4 backdrop-blur-xl">
+              <Icon className="size-5 text-secondary-800" aria-hidden />
+              <dd className="order-2">
+                {isLoading && isConfigured ? <Skeleton className="h-8 w-20" /> : <SpringCounter value={value} format={fmt} className="font-display text-3xl font-semibold tabular" />}
+              </dd>
+              <dt className="order-3 text-xs uppercase tracking-wider text-muted-foreground">{label}</dt>
+            </m.div>
+          ))}
+        </m.dl>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 7. Security
+// ---------------------------------------------------------------------------
+function Security() {
+  const chips: [LucideIcon, string][] = [
+    [Lock, 'AES-256 encryption'],
+    [Fingerprint, 'OTP + 2FA on payouts'],
+    [ShieldCheck, 'Aadhaar: last 4 digits only'],
+    [ReceiptText, 'Audit log on every rupee'],
+  ]
+  return (
+    <section className="py-16" aria-labelledby="security-title">
+      <div className="container flex max-w-4xl flex-col items-center gap-8 text-center">
+        <m.span
+          {...reveal}
+          variants={{ hidden: { scale: 0.6, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 18 } } }}
+          className="flex size-16 items-center justify-center rounded-modal border border-border bg-card shadow-md"
+        >
+          <Lock className="size-6 text-secondary-800" aria-hidden />
+        </m.span>
+        <Eyebrow>
+          <span id="security-title">your data isn't our business. keeping it safe is.</span>
+        </Eyebrow>
+        <ScrollText
+          className="justify-center text-2xl leading-snug text-muted-foreground md:text-4xl"
+          text="your loan account and aadhaar are encrypted and locked away. no wallet, no middleman, no room for mistakes. money only ever moves to the bank account your bank verified."
+        />
+        <m.ul {...reveal} variants={staggerContainer(0.06)} className="flex flex-wrap justify-center gap-2">
+          {chips.map(([Icon, label]) => (
+            <m.li key={label} variants={fadeUp} className="flex items-center gap-2 rounded-pill border border-border px-4 py-2 text-xs font-medium">
+              <Icon className="size-4 text-accent-700" aria-hidden /> {label}
+            </m.li>
+          ))}
+        </m.ul>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 8. Proof: the maths at full scale
+// ---------------------------------------------------------------------------
+function Proof() {
+  const at = calculateTargetTotals()
+  const numbers = [
+    { value: at.users, fmt: formatCompactNumber, label: 'members at full scale' },
+    { value: at.monthlyPool, fmt: formatCompactINR, label: 'pooled every month' },
+    { value: at.monthlyRescueCapacity, fmt: formatNumber, label: 'families rescued monthly' },
+  ]
+  return (
+    <section className="border-y border-border/60 py-16" aria-labelledby="proof-title">
+      <div className="container grid items-center gap-8 lg:grid-cols-[1fr_2fr]">
+        <m.div {...reveal} variants={fadeUp} className="flex flex-col gap-2">
+          <Eyebrow>built for 25 lakh members</Eyebrow>
+          <Display id="proof-title" className="text-5xl">
+            the maths
+            <br />
+            writes itself.
+          </Display>
+        </m.div>
+        <m.dl {...reveal} variants={staggerContainer(0.1)} className="grid gap-6 sm:grid-cols-3">
+          {numbers.map((n) => (
+            <m.div key={n.label} variants={fadeUp} className="flex flex-col gap-1">
+              <dd className="order-1">
+                <SpringCounter value={n.value} format={n.fmt} className="whitespace-nowrap font-display text-4xl font-semibold tabular md:text-5xl" />
+              </dd>
+              <dt className="order-2 text-xs uppercase tracking-wider text-muted-foreground">{n.label}</dt>
+            </m.div>
+          ))}
+        </m.dl>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 9. Door of light: opens wider as you scroll
+// ---------------------------------------------------------------------------
+function Door() {
+  const ref = useRef<HTMLElement>(null)
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
+  const scaleX = useTransform(scrollYProgress, [0, 1], [reduce ? 1 : 0.2, 1])
+  const glow = useTransform(scrollYProgress, [0, 1], [0.2, 1])
+
+  return (
+    <section ref={ref} className="relative overflow-hidden py-16" aria-labelledby="door-title">
+      <div className="container grid items-center gap-12 md:grid-cols-2">
+        <div aria-hidden className="relative flex h-[420px] justify-center md:h-[520px]">
+          <m.div style={{ opacity: glow }} className="absolute inset-y-0 left-1/2 w-full -translate-x-1/2 bg-[radial-gradient(40%_50%_at_50%_50%,rgb(255_183_3/0.35),transparent)]" />
+          <m.div
+            style={{ scaleX }}
+            className="relative h-full w-24 rounded-t-card bg-gradient-to-b from-white via-secondary-100 to-secondary shadow-[0_0_120px_40px_rgb(255_183_3/0.45)]"
+          />
+          <div className="absolute bottom-0 left-1/2 h-6 w-3/4 -translate-x-1/2 rounded-pill bg-secondary/30 blur-xl" />
+        </div>
+        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex flex-col gap-4">
+          <m.div variants={fadeUp}>
+            <Display id="door-title" className="text-6xl">
+              not everyone
+              <br />
+              gets it.
+            </Display>
+          </m.div>
+          <m.p variants={fadeUp} className="max-w-md text-muted-foreground">
+            Membership is for borrowers with a verified education or home loan. Once you are in, 999 others and our CSR partners pay your loan down
+            with you, every single month.
+          </m.p>
+          <m.div variants={fadeUp}>
+            <Button asChild size="lg" variant="glow" className="rounded-pill">
+              <Link to="/onboard">
+                Check if you qualify <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          </m.div>
+        </m.div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 10. FAQs
+// ---------------------------------------------------------------------------
+const FAQS: [string, string][] = [
+  ['Is there a wallet?', 'No. Every rupee is paid directly into your bank loan account, and every payment carries a UTR you can check with your bank.'],
+  [
+    'How much do I contribute?',
+    `${formatINR(edu.borrowerContributionPerUser)} a month for an education loan and ${formatINR(home.borrowerContributionPerUser)} for a home loan, collected by Razorpay eMandate.`,
+  ],
+  [
+    'How much goes into my loan?',
+    `${formatINR(edu.regularPerUser)} a month for education members and ${formatINR(home.regularPerUser)} for home members, on top of your normal EMI.`,
+  ],
+  [
+    'What is a rescue?',
+    `80% of CSR money in each block clears members' loans that face auction or default: ${edu.rescueCapacity} students or ${home.rescueCapacity} homes per block, every month.`,
+  ],
+  ['How is my data protected?', 'Loan account numbers are encrypted with AES-256, we keep only the last 4 digits of Aadhaar, and changing bank details or paying out needs OTP plus two-factor verification.'],
+  ['Who can join?', 'Anyone with an education or home loan from a bank that we can verify. Your block appears on the dashboard once verification is done.'],
+]
+
+function Faq() {
+  return (
+    <section id="faq" className="scroll-mt-16 py-16" aria-labelledby="faq-title">
+      <div className="container flex max-w-3xl flex-col gap-8">
+        <m.div {...reveal} variants={fadeUp}>
+          <Display id="faq-title" className="text-5xl">
+            questions,
+            <br />
+            answered.
+          </Display>
+        </m.div>
+        <m.div {...reveal} variants={fadeUp}>
+          <Accordion type="single" collapsible>
+            {FAQS.map(([q, a]) => (
+              <AccordionItem key={q} value={q}>
+                <AccordionTrigger className="text-lg">{q}</AccordionTrigger>
+                <AccordionContent>{a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </m.div>
       </div>
     </section>
   )

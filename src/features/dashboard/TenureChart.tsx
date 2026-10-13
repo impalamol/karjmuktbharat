@@ -1,6 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { m } from 'framer-motion'
-import { colors } from '@/lib/design-tokens'
+import { useThemeColors } from '@/lib/theme'
 import { formatCompactINR } from '@/lib/format'
 
 export interface YearPoint {
@@ -11,6 +11,7 @@ export interface YearPoint {
 
 /** Year-end balance bars. Bars grow from height 0 (Recharts animation) inside a Framer fade-up. Lazy chunk. */
 export default function TenureChart({ data, labels }: { data: YearPoint[]; labels: { without: string; with: string; months: string } }) {
+  const colors = useThemeColors()
   return (
     <m.div
       className="h-56 w-full md:h-64"
@@ -35,7 +36,7 @@ export default function TenureChart({ data, labels }: { data: YearPoint[]; label
             cursor={{ fill: colors.primary[50] }}
             formatter={(v: number) => formatCompactINR(v)}
             labelFormatter={(y: number) => `${y} ${labels.months}`}
-            contentStyle={{ borderRadius: 12, border: `1px solid ${colors.neutral[200]}`, fontSize: 12, boxShadow: '0 12px 24px -6px rgb(15 44 97 / 0.16)' }}
+            contentStyle={{ borderRadius: 12, border: `1px solid ${colors.neutral[200]}`, fontSize: 12, backgroundColor: colors.neutral[50], color: colors.neutral[900], boxShadow: '0 12px 24px -6px rgb(0 0 0 / 0.16)' }}
           />
           <Bar dataKey="withoutKarjmukt" name={labels.without} fill={colors.neutral[300]} radius={[4, 4, 0, 0]} animationDuration={1200} animationEasing="ease-out" />
           <Bar dataKey="withKarjmukt" name={labels.with} fill="url(#barWith)" radius={[4, 4, 0, 0]} animationDuration={1200} animationBegin={200} animationEasing="ease-out" />

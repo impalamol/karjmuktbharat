@@ -138,7 +138,7 @@ export function LuckyDraw() {
           <Gift className="size-6 text-secondary" aria-hidden />
           {q.data?.title ?? t('lucky_draw')}
         </CardTitle>
-        <CardDescription className="text-primary-100">{q.data?.prize ?? t('lucky_draw_d')}</CardDescription>
+        <CardDescription className="text-white/70">{q.data?.prize ?? t('lucky_draw_d')}</CardDescription>
       </CardHeader>
       <CardContent className="relative flex flex-col items-center gap-4">
         {q.isError ? (
@@ -183,11 +183,11 @@ export function LuckyDraw() {
                   {units.map(([v, l]) => (
                     <div key={l} className="flex flex-col items-center rounded-card border border-white/20 bg-white/10 p-2 backdrop-blur-xl">
                       <span className="text-2xl font-bold tabular">{String(v).padStart(2, '0')}</span>
-                      <span className="text-xs text-primary-100">{l}</span>
+                      <span className="text-xs text-white/70">{l}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-center text-xs text-primary-100">{t('spin_hint')}</p>
+                <p className="text-center text-xs text-white/70">{t('spin_hint')}</p>
               </>
             )}
           </>

@@ -17,9 +17,6 @@
     @apply min-h-dvh bg-background font-sans text-base text-foreground antialiased;
     font-feature-settings: 'cv11', 'ss01';
   }
-  html[lang='mr'] body {
-    @apply font-devanagari;
-  }
   * {
     @apply border-border;
     min-width: 0;

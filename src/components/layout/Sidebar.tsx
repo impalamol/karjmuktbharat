@@ -7,7 +7,7 @@ import { useT } from '@/i18n'
 import { useUiStore } from '@/stores/ui'
 import { cn } from '@/lib/utils'
 import type { NavItem } from './nav'
-import { LangToggle } from './LangToggle'
+import { ThemeToggle } from './ThemeToggle'
 
 /**
  * Tablet (768-1024): collapsible (icon rail <-> 280px).
@@ -21,7 +21,7 @@ export function Sidebar({ items, onLogout }: { items: NavItem[]; onLogout: () =>
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-white/20 bg-white/80 backdrop-blur-xl transition-[width] duration-200 md:flex',
+        'fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border/60 bg-glass/80 backdrop-blur-xl transition-[width] duration-200 md:flex',
         collapsed ? 'md:w-20 lg:w-70' : 'md:w-70',
       )}
       aria-label="Sidebar"
@@ -60,7 +60,7 @@ export function Sidebar({ items, onLogout }: { items: NavItem[]; onLogout: () =>
         </ul>
       </nav>
       <div className="flex flex-col gap-2 border-t border-border p-3">
-        <LangToggle className={cn('justify-start', collapsed && 'md:justify-center lg:justify-start')} />
+        <ThemeToggle withLabel className={cn('justify-start', collapsed && 'md:justify-center lg:justify-start')} />
         <Button variant="ghost" size="sm" onClick={onLogout} className={cn('justify-start', collapsed && 'md:justify-center lg:justify-start')}>
           <LogOut aria-hidden />
           <span className={cn(collapsed && 'md:sr-only lg:not-sr-only')}>{t('nav_logout')}</span>

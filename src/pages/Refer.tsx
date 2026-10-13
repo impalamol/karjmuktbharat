@@ -43,7 +43,7 @@ export default function Refer() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 md:gap-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('refer_title')}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">{t('refer_title')}</h1>
       <Card>
         <CardHeader>
           <CardTitle>{t('refer_code')}</CardTitle>

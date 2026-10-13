@@ -1,8 +1,9 @@
 import { m } from 'framer-motion'
-import { colors } from '@/lib/design-tokens'
+import { useThemeColors } from '@/lib/theme'
 
 /** SVG ring whose strokeDashoffset animates from empty to `value`% (easeInOut 1.5s). */
 export function ProgressRing({ value, size = 120, stroke = 10, label, sublabel }: { value: number; size?: number; stroke?: number; label: string; sublabel?: string }) {
+  const colors = useThemeColors()
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const pct = Math.min(100, Math.max(0, value))
