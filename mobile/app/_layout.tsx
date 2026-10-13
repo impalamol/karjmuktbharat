@@ -75,7 +75,8 @@ function LockGate() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold, Inter_700Bold })
+  // The single-file web preview ships Inter as inline @font-face rules, so it skips the asset loader.
+  const [fontsLoaded, fontError] = useFonts(process.env.EXPO_PUBLIC_INLINE_FONTS ? {} : { Inter_500Medium, Inter_600SemiBold, Inter_700Bold })
   const authReady = useAuthListener()
   const unlocked = useSession((s) => s.unlocked)
   const setUnlocked = useSession((s) => s.setUnlocked)
@@ -89,7 +90,8 @@ export default function RootLayout() {
     })
   }, [setUnlocked])
 
-  const ready = fontsLoaded && authReady && lockChecked
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  const ready = (fontsLoaded || !!fontError) && authReady && lockChecked
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync()
   }, [ready])
