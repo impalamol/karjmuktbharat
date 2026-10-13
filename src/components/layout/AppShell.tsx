@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/brand/Logo'
@@ -15,6 +15,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { LangToggle } from './LangToggle'
 import { OfflineBanner } from './OfflineBanner'
+import { AnimatedOutlet } from './AnimatedOutlet'
 
 /** Authenticated layout: bottom nav (<768), collapsible sidebar (768-1024), fixed 280px sidebar (>1024). */
 export function AppShell() {
@@ -30,12 +31,13 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="relative isolate min-h-dvh">
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(50%_40%_at_100%_0%,rgb(255_183_3/0.10),transparent),radial-gradient(60%_50%_at_0%_100%,rgb(15_44_97/0.08),transparent)]" />
       <Sidebar items={items} onLogout={logout} />
 
       {/* Mobile header */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 bg-primary px-4 text-primary-foreground shadow-md md:hidden">
-        <Logo className="[&_span]:text-primary-foreground" />
+        <Logo onDark />
         <div className="flex items-center gap-1">
           <LangToggle onDark />
           <Button variant="ghost" size="icon" onClick={logout} aria-label={t('nav_logout')} className="text-primary-foreground hover:bg-primary-600">
@@ -49,7 +51,7 @@ export function AppShell() {
         <main id="main" className="container pb-bottom-nav pt-4 md:pb-8 md:pt-6 xl:pt-8">
           <ErrorBoundary>
             <Suspense fallback={<PageSkeleton />}>
-              <Outlet />
+              <AnimatedOutlet />
             </Suspense>
           </ErrorBoundary>
         </main>

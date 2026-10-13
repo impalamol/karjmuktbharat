@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { m } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 // Wrapper scrolls horizontally (never the page). First column can be made sticky with `sticky left-0`.
@@ -39,4 +40,7 @@ const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttribu
 ))
 TableCaption.displayName = 'TableCaption'
 
-export { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, TableCaption }
+/** TableRow with Framer Motion props (for staggered row entrances). */
+const MotionTableRow = m.create(TableRow)
+
+export { Table, TableHeader, TableBody, TableHead, TableRow, MotionTableRow, TableCell, TableCaption }

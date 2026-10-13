@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Copy, Receipt } from 'lucide-react'
+import { AnimatePresence, m } from 'framer-motion'
+import { Check, ChevronLeft, ChevronRight, Copy, Receipt } from 'lucide-react'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { MotionTableRow, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { TableSkeleton } from '@/components/states/Skeletons'
@@ -41,9 +42,9 @@ export function PaymentTable() {
   }
 
   return (
-    <Card>
+    <Card variant="glass" static>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-xl">
           <Receipt className="size-6 text-primary" aria-hidden />
           {t('payment_proof')}
         </CardTitle>
@@ -55,13 +56,19 @@ export function PaymentTable() {
         ) : q.isLoading ? (
           <TableSkeleton />
         ) : rows.length === 0 ? (
-          <EmptyState icon={Receipt} title={t('empty_title')} description={t('empty_txn')} />
+          <EmptyState animation="empty" icon={Receipt} title={t('empty_txn_title')} description={t('empty_txn')} />
         ) : (
           <>
             {/* Mobile: cards */}
             <ul className="flex flex-col gap-3 md:hidden">
-              {rows.map((r) => (
-                <li key={r.id} className="rounded-card border border-border p-3 shadow-sm">
+              {rows.map((r, i) => (
+                <m.li
+                  key={r.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.3, ease: 'easeOut' }}
+                  className="rounded-modal border border-border bg-white/80 p-3 shadow-sm"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold">{t(TYPE_LABEL[r.type])}</span>
                     <span className="text-lg font-bold tabular text-accent-700">{formatINR(r.amount)}</span>
@@ -71,7 +78,7 @@ export function PaymentTable() {
                     <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
                   </div>
                   {r.utr_no && <Utr utr={r.utr_no} />}
-                </li>
+                </m.li>
               ))}
             </ul>
             {/* md+: table with sticky first column */}
@@ -87,16 +94,16 @@ export function PaymentTable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((r) => (
-                    <TableRow key={r.id}>
+                  {rows.map((r, i) => (
+                    <MotionTableRow key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04, duration: 0.3 }}>
                       <TableCell className="sticky left-0 bg-card">{formatDate(r.created_at, lang)}</TableCell>
                       <TableCell>{t(TYPE_LABEL[r.type])}</TableCell>
                       <TableCell className="text-right font-semibold tabular">{formatINR(r.amount)}</TableCell>
-                      <TableCell className="font-mono text-xs">{r.utr_no ?? '—'}</TableCell>
+                      <TableCell className="font-mono text-xs">{r.utr_no ? <Utr utr={r.utr_no} inline /> : '—'}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
                       </TableCell>
-                    </TableRow>
+                    </MotionTableRow>
                   ))}
                 </TableBody>
               </Table>
@@ -117,15 +124,27 @@ export function PaymentTable() {
   )
 }
 
-function Utr({ utr }: { utr: string }) {
+/** UTR with a copy button that pops a check mark on tap. */
+function Utr({ utr, inline = false }: { utr: string; inline?: boolean }) {
   const t = useT()
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    await navigator.clipboard?.writeText(utr).catch(() => undefined)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
   return (
-    <div className="mt-2 flex items-center justify-between gap-2 rounded-card bg-muted px-2 py-1">
+    <div className={inline ? 'flex items-center gap-1' : 'mt-2 flex items-center justify-between gap-2 rounded-card bg-muted px-2 py-1'}>
       <span className="truncate font-mono text-xs">
-        {t('utr')}: {utr}
+        {!inline && `${t('utr')}: `}
+        {utr}
       </span>
-      <Button variant="ghost" size="icon" aria-label={`Copy ${t('utr')}`} onClick={() => navigator.clipboard?.writeText(utr)}>
-        <Copy aria-hidden />
+      <Button variant="ghost" size="icon" aria-label={`${t('refer_copy')} ${t('utr')} ${utr}`} onClick={copy} className={inline ? 'fine:md:size-8' : undefined}>
+        <AnimatePresence mode="wait" initial={false}>
+          <m.span key={copied ? 'ok' : 'copy'} initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 20 }} className="flex">
+            {copied ? <Check className="text-accent-700" aria-hidden /> : <Copy aria-hidden />}
+          </m.span>
+        </AnimatePresence>
       </Button>
     </div>
   )

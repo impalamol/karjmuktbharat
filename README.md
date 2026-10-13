@@ -63,7 +63,7 @@ supabase/
 - Indexes cover `user_id`, `loan_type`, `verification_status`, `created_at` and `block_number`, plus partial indexes for the pending queue, open blocks and the rescue wall.
 - Landing counters read O(1) counter rows and a ≤2,500-row pools table, never `COUNT(*)` over millions of rows.
 - Seat allocation runs inside a transaction under a per-type advisory lock, so concurrent verifications never double-book a seat.
-- Every page is code-split. **First load is 194 kB gzipped** against a 300 kB budget, and `npm run size` enforces it in CI. Recharts (about 105 kB) loads only with the dashboard chart. All chunks together come to about 380 kB.
+- Every page is code-split. **First load is 212 kB gzipped** against a 300 kB budget, and `npm run size` enforces it in CI. Recharts (about 105 kB) loads only with the dashboard chart. All chunks together come to about 487 kB, with Lottie, confetti and Recharts loaded only when needed.
 
 ## Getting started
 

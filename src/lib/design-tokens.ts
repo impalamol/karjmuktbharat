@@ -31,6 +31,8 @@ export const colors = {
     500: '#FFB703',
     600: '#E0A000',
     700: '#B37F00',
+    /** Gold for TEXT on light backgrounds (6.1:1 on white). #FFB703 itself is only for fills / text on blue. */
+    800: '#7A5600',
   },
   /** Success Green */
   accent: {
@@ -117,7 +119,8 @@ export const spacing = {
  * Kept separate so the spacing scale stays strictly 4/8/12/16/24/32/48/64.
  */
 export const sizes = {
-  7: '28px', // avatar in the block grid
+  5: '20px', // dot in the block grid
+  7: '28px',
   10: '40px',
   24: '96px',
   48: '192px',
@@ -125,6 +128,19 @@ export const sizes = {
   64: '256px', // chart / grid height
   80: '320px', // list viewport
 } as const
+
+/** 60-30-10 rule: 60% white / slate-50 surfaces, 30% Trust Blue, 10% Gold accents. */
+export const colorRatio = { surface: 0.6, primary: 0.3, accent: 0.1 } as const
+
+/** Glassmorphism recipe used by Card variant="glass". */
+export const glass = {
+  background: 'rgb(255 255 255 / 0.8)',
+  border: 'rgb(255 255 255 / 0.2)',
+  blur: '24px', // backdrop-blur-xl
+} as const
+
+/** Focus ring: blue-500, visible on white and on Trust Blue. */
+export const focusRing = '#3B82F6'
 
 export const radius = {
   none: '0px',
@@ -159,9 +175,12 @@ export const layout = {
 } as const
 
 export const motion = {
-  duration: { fast: 0.15, base: 0.25, slow: 0.4 },
+  duration: { fast: 0.15, base: 0.3, slow: 0.5, counter: 1.5, mesh: 20 },
   ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  /** Button press spring from the brief */
+  spring: { type: 'spring', stiffness: 400, damping: 17 } as const,
+  softSpring: { type: 'spring', stiffness: 120, damping: 20 } as const,
 } as const
 
-export const tokens = { colors, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
+export const tokens = { colors, colorRatio, glass, focusRing, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
 export default tokens

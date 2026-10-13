@@ -1,7 +1,7 @@
 import { lazy, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { LazyMotion, domAnimation, MotionConfig } from 'framer-motion'
+import { LazyMotion, MotionConfig } from 'framer-motion'
 import { queryClient } from '@/lib/queryClient'
 import { isConfigured } from '@/lib/env'
 import { useAuthBootstrap } from '@/hooks/useAuth'
@@ -11,6 +11,9 @@ import { AppShell } from '@/components/layout/AppShell'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { PwaPrompt } from '@/components/layout/PwaPrompt'
 import { RequireAdmin, RequireAuth } from '@/components/auth/Guards'
+
+// Animation features (incl. drag + layout) load async after first paint.
+const loadMotionFeatures = () => import('@/lib/motion-features').then((r) => r.default)
 
 // Every page is its own chunk.
 const Landing = lazy(() => import('@/pages/Landing'))
@@ -69,7 +72,7 @@ function Boot() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LazyMotion features={domAnimation} strict>
+      <LazyMotion features={loadMotionFeatures} strict>
         <MotionConfig reducedMotion="user">
           <Boot />
         </MotionConfig>

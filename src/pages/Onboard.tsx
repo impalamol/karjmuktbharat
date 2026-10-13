@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,10 +7,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Home as HomeIcon, Lock, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Field } from '@/components/forms/Field'
+import { FloatingField } from '@/components/forms/FloatingField'
 import { OtpLogin } from '@/components/auth/OtpLogin'
 import { useSession } from '@/hooks/useAuth'
 import { useT, type DictKey } from '@/i18n'
@@ -18,6 +17,8 @@ import { callFunction, ApiError } from '@/lib/supabase'
 import { calculateInterestSaved, calculateRegularPerUser } from '@/lib/calculations'
 import { formatINR, formatMonths } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { stepSlide } from '@/lib/motion'
+import { celebrate } from '@/lib/confetti'
 import { bankSchema, consentSchema, loanSchema, profileSchema, type BankDetails, type LoanDetails, type ProfileDetails } from '@/lib/validation'
 import { useOnboardStore } from '@/stores/onboard'
 
@@ -30,6 +31,11 @@ export default function Onboard() {
   const setStep = useOnboardStore((s) => s.setStep)
   const savedAt = useOnboardStore((s) => s.savedAt)
   const [done, setDone] = useState(false)
+  const prevStep = useRef(step)
+  const direction = step >= prevStep.current ? 1 : -1
+  useEffect(() => {
+    prevStep.current = step
+  }, [step])
 
   // Signed in -> skip the mobile step; signed out -> always start at mobile.
   useEffect(() => {
@@ -56,24 +62,18 @@ export default function Onboard() {
             </span>
           )}
         </div>
-        <Progress value={progress} aria-label={`${Math.round(progress)}%`} indicatorClassName="bg-secondary" />
+        <Progress value={progress} duration={0.6} shimmer aria-label={`${Math.round(progress)}%`} indicatorClassName="bg-gradient-to-r from-primary to-secondary" className="h-3" />
         <ol className="hidden grid-cols-5 gap-2 sm:grid" aria-hidden>
           {STEPS.map((s, i) => (
-            <li key={s} className={cn('text-center text-xs', i <= step ? 'font-semibold text-primary' : 'text-muted-foreground')}>
+            <m.li key={s} animate={{ opacity: i <= step ? 1 : 0.5, y: i === step ? -2 : 0 }} className={cn('text-center text-xs', i <= step ? 'font-semibold text-primary' : 'text-muted-foreground')}>
               {t(s)}
-            </li>
+            </m.li>
           ))}
         </ol>
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
-        <m.div
-          key={step}
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -24 }}
-          transition={{ duration: 0.2 }}
-        >
+      <AnimatePresence mode="wait" initial={false} custom={direction}>
+        <m.div key={step} custom={direction} variants={stepSlide} initial="enter" animate="center" exit="exit">
           {step === 0 && (
             <StepCard title={t('login_title')}>
               <OtpLogin onSignedIn={() => setStep(1)} />
@@ -91,7 +91,7 @@ export default function Onboard() {
 
 function StepCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <Card>
+    <Card variant="glass" static>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
@@ -120,12 +120,8 @@ function StepActions({ onBack, submitLabel, loading }: { onBack?: () => void; su
   )
 }
 
-function TextField({ id, label, hint, error, reg, ...rest }: { id: string; label: string; hint?: string; error?: string; reg: UseFormRegisterReturn } & React.ComponentProps<typeof Input>) {
-  return (
-    <Field label={label} hint={hint} error={error} htmlFor={id}>
-      <Input id={id} aria-invalid={!!error} aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined} {...rest} {...reg} />
-    </Field>
-  )
+function TextField({ id, label, hint, error, reg, ...rest }: { id: string; label: string; hint?: string; error?: string; reg: UseFormRegisterReturn } & Omit<React.ComponentProps<typeof FloatingField>, 'id' | 'label'>) {
+  return <FloatingField id={id} label={label} hint={hint} error={error} {...rest} {...reg} />
 }
 
 function ProfileStep() {
@@ -154,7 +150,6 @@ function ProfileStep() {
           inputMode="numeric"
           autoComplete="off"
           maxLength={14}
-          placeholder="XXXX XXXX XXXX"
           error={e.aadhaar?.message}
           reg={form.register('aadhaar')}
         />
@@ -344,7 +339,7 @@ function ReviewStep({ onDone }: { onDone: () => void }) {
         </dl>
         {loan.isAuctionCase && <Badge variant="warning" className="w-fit">{t('auction_case')}</Badge>}
         {missingSensitive && (
-          <p role="alert" className="rounded-card bg-secondary-50 p-3 text-sm text-secondary-700">
+          <p role="alert" className="rounded-card bg-secondary-50 p-3 text-sm text-secondary-800">
             {t('aadhaar_hint')} <Button variant="link" className="h-auto p-0" onClick={() => setStep(1)}>{t('back')}</Button>
           </p>
         )}
@@ -364,14 +359,19 @@ function ReviewStep({ onDone }: { onDone: () => void }) {
   )
 }
 
+const LottieAnim = lazy(() => import('@/components/brand/LottieAnim'))
+
 function Submitted() {
   const t = useT()
   const navigate = useNavigate()
+  useEffect(() => {
+    void celebrate('cannons')
+  }, [])
   return (
     <div className="container flex max-w-lg flex-col items-center gap-4 py-16 text-center">
-      <m.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex size-16 items-center justify-center rounded-pill bg-accent-50 text-accent">
-        <CheckCircle2 className="size-8" aria-hidden />
-      </m.div>
+      <Suspense fallback={<CheckCircle2 className="size-24 text-accent" aria-hidden />}>
+        <LottieAnim name="success" loop={false} className="size-24" />
+      </Suspense>
       <h1 className="text-2xl font-bold">{t('submitted_title')}</h1>
       <p className="text-muted-foreground">{t('submitted_desc')}</p>
       <Button size="lg" onClick={() => navigate('/dashboard')}>

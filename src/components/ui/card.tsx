@@ -1,13 +1,33 @@
 import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { m, type HTMLMotionProps } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { cardHover } from '@/lib/motion'
 
-// Design rule: every card has border + shadow-sm + hover:shadow-md transition.
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('rounded-card border border-border bg-card text-card-foreground shadow-sm transition-shadow duration-200 hover:shadow-md', className)}
-    {...props}
-  />
+// Every card: border + shadow-sm, and on hover lifts 4px, gains shadow-lg and a blue border (300ms).
+const cardVariants = cva(
+  'rounded-card border text-card-foreground shadow-sm transition-[box-shadow,border-color] duration-300 ease-out hover:shadow-lg',
+  {
+    variants: {
+      variant: {
+        default: 'border-border bg-card hover:border-primary-200',
+        /** Glassmorphism: backdrop-blur-xl + bg-white/80 + border-white/20 */
+        glass: 'border-white/20 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 hover:border-primary-200/60',
+        /** Trust Blue feature card */
+        brand: 'border-primary-700 bg-primary text-primary-foreground hover:border-secondary/60',
+      },
+    },
+    defaultVariants: { variant: 'default' },
+  },
+)
+
+export interface CardProps extends HTMLMotionProps<'div'>, VariantProps<typeof cardVariants> {
+  /** Disable hover lift (e.g. for full-width tables) */
+  static?: boolean
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, variant, static: isStatic, ...props }, ref) => (
+  <m.div ref={ref} className={cn(cardVariants({ variant }), className)} {...(isStatic ? {} : cardHover)} {...props} />
 ))
 Card.displayName = 'Card'
 
@@ -36,4 +56,4 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 ))
 CardFooter.displayName = 'CardFooter'
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }

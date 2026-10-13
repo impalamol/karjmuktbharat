@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/brand/Logo'
 import { PageSkeleton } from '@/components/states/Skeletons'
@@ -8,6 +8,7 @@ import { useSession } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
 import { LangToggle } from './LangToggle'
 import { OfflineBanner } from './OfflineBanner'
+import { AnimatedOutlet } from './AnimatedOutlet'
 
 export function PublicLayout() {
   const t = useT()
@@ -17,7 +18,7 @@ export function PublicLayout() {
       <header className="sticky top-0 z-30 border-b border-primary-800 bg-primary text-primary-foreground shadow-md">
         <div className="container flex h-14 items-center justify-between gap-2 md:h-16">
           <Link to="/" aria-label="KARJMUKTBHARAT home" className="rounded-card">
-            <Logo className="[&_span]:text-primary-foreground" />
+            <Logo onDark />
           </Link>
           <div className="flex items-center gap-2">
             <LangToggle onDark />
@@ -37,7 +38,7 @@ export function PublicLayout() {
       <main id="main" className="flex-1">
         <ErrorBoundary>
           <Suspense fallback={<div className="container py-8"><PageSkeleton /></div>}>
-            <Outlet />
+            <AnimatedOutlet />
           </Suspense>
         </ErrorBoundary>
       </main>

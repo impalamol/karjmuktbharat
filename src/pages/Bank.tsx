@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Field } from '@/components/forms/Field'
+import { FloatingField } from '@/components/forms/FloatingField'
 import { MfaGate } from '@/components/auth/MfaGate'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
@@ -40,13 +39,13 @@ export default function Bank() {
       ) : loans.isError ? (
         <ErrorState error={loans.error} onRetry={() => loans.refetch()} />
       ) : !loans.data?.length ? (
-        <Card>
+        <Card variant="glass">
           <EmptyState icon={Landmark} title={t('empty_title')} description={t('how_1_d')} />
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {loans.data.map((loan) => (
-            <Card key={loan.id}>
+            <Card key={loan.id} variant="glass">
               <CardHeader className="flex-row items-start justify-between gap-2">
                 <div className="flex flex-col gap-1">
                   <CardTitle>{loan.bank_name}</CardTitle>
@@ -120,20 +119,20 @@ function BankForm({ loan, onSaved }: { loan: Loan; onSaved: () => void }) {
 
   return (
     <form noValidate className="flex flex-col gap-4" onSubmit={form.handleSubmit((v) => save.mutate(v))}>
-      <Field label={t('bank_name')} htmlFor="b-name" error={e.bankName?.message}>
-        <Input id="b-name" {...form.register('bankName')} />
-      </Field>
-      <Field label={t('ifsc')} htmlFor="b-ifsc" error={e.ifsc?.message}>
-        <Input id="b-ifsc" className="uppercase" maxLength={11} {...form.register('ifsc')} />
-      </Field>
-      <Field label={t('loan_account')} htmlFor="b-acc" error={e.loanAccount?.message}>
-        <Input id="b-acc" inputMode="numeric" autoComplete="off" {...form.register('loanAccount')} />
-      </Field>
-      <Field label={t('loan_account_confirm')} htmlFor="b-acc2" error={e.loanAccountConfirm?.message}>
-        <Input id="b-acc2" inputMode="numeric" autoComplete="off" onPaste={(ev) => ev.preventDefault()} {...form.register('loanAccountConfirm')} />
-      </Field>
+      <FloatingField id="b-name" label={t('bank_name')} error={e.bankName?.message} {...form.register('bankName')} />
+      <FloatingField id="b-ifsc" label={t('ifsc')} error={e.ifsc?.message} className="uppercase" maxLength={11} {...form.register('ifsc')} />
+      <FloatingField id="b-acc" label={t('loan_account')} error={e.loanAccount?.message} inputMode="numeric" autoComplete="off" {...form.register('loanAccount')} />
+      <FloatingField
+        id="b-acc2"
+        label={t('loan_account_confirm')}
+        error={e.loanAccountConfirm?.message}
+        inputMode="numeric"
+        autoComplete="off"
+        onPaste={(ev) => ev.preventDefault()}
+        {...form.register('loanAccountConfirm')}
+      />
       {save.isError && <p role="alert" className="text-sm text-destructive">{save.error instanceof ApiError ? save.error.message : t('error_title')}</p>}
-      <Button type="submit" loading={save.isPending}>{t('bank_save')}</Button>
+      <Button type="submit" variant="glow" loading={save.isPending}>{t('bank_save')}</Button>
     </form>
   )
 }

@@ -48,7 +48,7 @@
     padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
   .pb-bottom-nav {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+    padding-bottom: calc(64px + max(12px, env(safe-area-inset-bottom)) + 32px);
   }
   .tabular {
     font-variant-numeric: tabular-nums;

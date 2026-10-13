@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
+export function Logo({ className, compact = false, onDark = false }: { className?: string; compact?: boolean; onDark?: boolean }) {
   return (
     <span className={cn('inline-flex items-center gap-2 font-bold tracking-tight', className)}>
       <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
@@ -9,8 +9,8 @@ export function Logo({ className, compact = false }: { className?: string; compa
         <circle cx="24" cy="9" r="2" fill="#059669" />
       </svg>
       {!compact && (
-        <span className="text-lg leading-none">
-          KARJMUKT<span className="text-secondary-600">BHARAT</span>
+        <span className={cn('text-lg leading-none', onDark ? 'text-primary-foreground' : 'text-primary')}>
+          KARJMUKT<span className={onDark ? 'text-secondary' : 'text-secondary-800'}>BHARAT</span>
         </span>
       )}
     </span>

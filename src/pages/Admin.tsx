@@ -22,6 +22,7 @@ import { qk } from '@/lib/queryClient'
 import { ApiError, callFunction, supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { rejectSchema } from '@/lib/validation'
+import { celebrate } from '@/lib/confetti'
 
 type Tab = 'verify' | 'rescue' | 'draw' | 'audit'
 const TABS: { id: Tab; label: DictKey; icon: typeof Check }[] = [
@@ -129,9 +130,10 @@ function VerifyQueue() {
 
   const decide = useMutation({
     mutationFn: (v: { loanId: string; decision: 'verified' | 'rejected'; reason?: string }) => callFunction('admin-verify-loan', v),
-    onSuccess: () => {
+    onSuccess: (_, v) => {
       void qc.invalidateQueries({ queryKey: qk.adminPending })
       void qc.invalidateQueries({ queryKey: qk.stats })
+      if (v.decision === 'verified') void celebrate('burst')
       setRejecting(null)
     },
   })
@@ -304,6 +306,7 @@ function RescuePanel() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.adminRescue })
       void qc.invalidateQueries({ queryKey: qk.rescueWall })
+      void celebrate('cannons')
     },
   })
 

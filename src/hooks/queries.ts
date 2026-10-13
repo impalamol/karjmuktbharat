@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { isConfigured } from '@/lib/env'
@@ -224,7 +224,9 @@ export function useRescueWall() {
     },
   })
 
+  const [freshIds, setFreshIds] = useState<Set<string>>(new Set())
   useBroadcast<RescueItem>('rescue_wall', 'rescue_saved', (items) => {
+    setFreshIds(new Set(items.map((i) => i.id)))
     qc.setQueryData<InfiniteData<RescueItem[], WallCursor>>(qk.rescueWall, (old) => {
       if (!old) return old
       const seen = new Set(old.pages.flat().map((r) => r.id))
@@ -235,7 +237,7 @@ export function useRescueWall() {
     })
   })
 
-  return query
+  return { ...query, freshIds }
 }
 
 // ---------------------------------------------------------------------------

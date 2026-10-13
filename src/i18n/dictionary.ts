@@ -183,6 +183,17 @@ export const en = {
   reload: 'Update',
   footer_rights: 'All rights reserved.',
   footer_note: 'Payments are made only to verified bank loan accounts. KARJMUKTBHARAT never holds your money.',
+  loan_closed: 'closed',
+  seat_open: 'Open seat',
+  members_lbl: 'Members',
+  empty_txn_title: 'No transactions yet',
+  verifying: 'Verifying...',
+  block_filled: 'Block filled',
+  next_credit: 'Next credit',
+  next_credit_d: 'Paid to your loan account on the 5th',
+  spin_wheel: 'Spin the wheel',
+  spin_hint: 'Drag the wheel or press Spin. Just for fun: the real winner is picked fairly by the platform.',
+  seats_left: 'seats left',
 }
 
 export type Dict = typeof en
@@ -372,4 +383,15 @@ export const mr: Dict = {
   reload: 'अपडेट करा',
   footer_rights: 'सर्व हक्क राखीव.',
   footer_note: 'पेमेंट फक्त सत्यापित बँक कर्ज खात्यांमध्येच होते. कर्जमुक्तभारत तुमचे पैसे कधीही ठेवत नाही.',
+  loan_closed: 'फेडले',
+  seat_open: 'रिकामी जागा',
+  members_lbl: 'सदस्य',
+  empty_txn_title: 'अजून कोणतेही व्यवहार नाहीत',
+  verifying: 'पडताळणी सुरू आहे...',
+  block_filled: 'ब्लॉक भरला',
+  next_credit: 'पुढील जमा',
+  next_credit_d: 'दर महिन्याच्या ५ तारखेला तुमच्या कर्ज खात्यात',
+  spin_wheel: 'चाक फिरवा',
+  spin_hint: 'चाक ओढा किंवा फिरवा दाबा. हे फक्त मजेसाठी आहे: खरा विजेता प्लॅटफॉर्म निष्पक्षपणे निवडतो.',
+  seats_left: 'जागा शिल्लक',
 }

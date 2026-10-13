@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 import animate from 'tailwindcss-animate'
 import plugin from 'tailwindcss/plugin'
-import { colors, typography, spacing, sizes, radius, shadows, breakpoints } from './src/lib/design-tokens'
+import { colors, typography, spacing, sizes, radius, shadows, breakpoints, focusRing } from './src/lib/design-tokens'
 
 /**
  * Every value below comes from src/lib/design-tokens.ts.
@@ -48,7 +48,7 @@ export default {
         muted: { DEFAULT: colors.neutral[100], foreground: colors.neutral[500] },
         border: colors.neutral[200],
         input: colors.neutral[300],
-        ring: colors.primary[400],
+        ring: focusRing,
         destructive: { DEFAULT: colors.semantic.error, foreground: colors.semantic.errorForeground },
         warning: { DEFAULT: colors.semantic.warning, foreground: colors.semantic.warningForeground },
         success: { DEFAULT: colors.semantic.success, foreground: '#FFFFFF' },
@@ -60,9 +60,14 @@ export default {
       minWidth: { touch: '44px' },
       keyframes: {
         shimmer: { '100%': { transform: 'translateX(100%)' } },
+        'gold-glow': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgb(255 183 3 / 0)' },
+          '50%': { boxShadow: '0 0 0 6px rgb(255 183 3 / 0.35)' },
+        },
       },
       animation: {
         shimmer: 'shimmer 1.5s infinite',
+        'gold-glow': 'gold-glow 1.6s ease-in-out 3',
       },
     },
   },
