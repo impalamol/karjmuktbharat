@@ -46,7 +46,10 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      'virtual:demo-backend': path.resolve(__dirname, mode === 'demo' ? './src/demo/install.ts' : './src/demo/none.ts'),
+    },
   },
   build: {
     target: 'es2020',
