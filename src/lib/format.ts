@@ -34,6 +34,6 @@ export function formatMonths(m: number, labels: { yr: string; mo: string; never:
 
 export const maskAccount = (last4: string) => `•••• •••• ${last4}`
 
-export function formatDate(iso: string, lang: 'en' | 'mr' = 'en') {
-  return new Intl.DateTimeFormat(lang === 'mr' ? 'mr-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
+export function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
 }

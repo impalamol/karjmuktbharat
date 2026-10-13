@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import { NAV } from './nav'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
-import { LangToggle } from './LangToggle'
+import { ThemeToggle } from './ThemeToggle'
 import { OfflineBanner } from './OfflineBanner'
 import { AnimatedOutlet } from './AnimatedOutlet'
 
@@ -32,15 +32,15 @@ export function AppShell() {
 
   return (
     <div className="relative isolate min-h-dvh">
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(50%_40%_at_100%_0%,rgb(255_183_3/0.10),transparent),radial-gradient(60%_50%_at_0%_100%,rgb(15_44_97/0.08),transparent)]" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(50%_40%_at_100%_0%,rgb(255_183_3/0.08),transparent),radial-gradient(60%_50%_at_0%_100%,rgb(var(--primary-300)/0.10),transparent)]" />
       <Sidebar items={items} onLogout={logout} />
 
       {/* Mobile header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 bg-primary px-4 text-primary-foreground shadow-md md:hidden">
-        <Logo onDark />
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl md:hidden">
+        <Logo />
         <div className="flex items-center gap-1">
-          <LangToggle onDark />
-          <Button variant="ghost" size="icon" onClick={logout} aria-label={t('nav_logout')} className="text-primary-foreground hover:bg-primary-600">
+          <ThemeToggle />
+          <Button variant="ghost" size="icon" onClick={logout} aria-label={t('nav_logout')}>
             <LogOut aria-hidden />
           </Button>
         </div>

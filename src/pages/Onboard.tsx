@@ -51,7 +51,7 @@ export default function Onboard() {
   return (
     <div className="container flex max-w-2xl flex-col gap-6 py-6 md:py-12">
       <div className="flex flex-col gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">{t('onboard_title')}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">{t('onboard_title')}</h1>
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium">
             {t('step')} {step + 1} {t('of')} {STEPS.length}: {t(STEPS[step]!)}

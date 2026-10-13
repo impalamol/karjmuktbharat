@@ -129,7 +129,7 @@ export function BlockGrid({ type, block }: { type: BlockType; block: number }) {
         ) : seats.isLoading ? (
           <Skeleton className="h-64 w-full" />
         ) : (
-          <div ref={parentRef} tabIndex={0} className="h-64 overflow-y-auto overscroll-contain rounded-modal bg-white/60 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" role="grid" aria-label={t('my_block')}>
+          <div ref={parentRef} tabIndex={0} className="h-64 overflow-y-auto overscroll-contain rounded-modal bg-card/60 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" role="grid" aria-label={t('my_block')}>
             <div style={{ height: virt.getTotalSize(), position: 'relative' }}>
               {virt.getVirtualItems().map((row) => (
                 <div key={row.key} role="row" className="absolute inset-x-0 flex gap-1" style={{ top: row.start, height: CELL }}>

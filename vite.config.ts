@@ -4,10 +4,13 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Demo builds are hosted under a sub-path with no service worker.
+  base: mode === 'demo' ? './' : '/',
   plugins: [
     react(),
     VitePWA({
+      disable: mode === 'demo',
       registerType: 'prompt',
       includeAssets: ['icons/logo.svg', 'icons/apple-touch-icon.png'],
       manifest: {
@@ -43,7 +46,10 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      'virtual:demo-backend': path.resolve(__dirname, mode === 'demo' ? './src/demo/install.ts' : './src/demo/none.ts'),
+    },
   },
   build: {
     target: 'es2020',
@@ -69,4 +75,4 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     css: false,
   },
-})
+}))

@@ -1,11 +1,11 @@
 import { lazy, useEffect } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createHashRouter, RouterProvider } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { LazyMotion, MotionConfig } from 'framer-motion'
 import { queryClient } from '@/lib/queryClient'
 import { isConfigured } from '@/lib/env'
 import { useAuthBootstrap } from '@/hooks/useAuth'
-import { useUiStore } from '@/stores/ui'
+import { applyTheme, useUiStore } from '@/stores/ui'
 import { useT } from '@/i18n'
 import { AppShell } from '@/components/layout/AppShell'
 import { PublicLayout } from '@/components/layout/PublicLayout'
@@ -24,7 +24,9 @@ const Refer = lazy(() => import('@/pages/Refer'))
 const Admin = lazy(() => import('@/pages/Admin'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
-const router = createBrowserRouter([
+// Demo builds are hosted where the server can't rewrite deep links, so they route by #hash.
+const createRouter = import.meta.env.MODE === 'demo' ? createHashRouter : createBrowserRouter
+const router = createRouter([
   {
     element: <PublicLayout />,
     children: [
@@ -51,11 +53,9 @@ const router = createBrowserRouter([
 
 function Boot() {
   useAuthBootstrap()
-  const lang = useUiStore((s) => s.lang)
+  const theme = useUiStore((s) => s.theme)
   const t = useT()
-  useEffect(() => {
-    document.documentElement.lang = lang === 'mr' ? 'mr' : 'en'
-  }, [lang])
+  useEffect(() => applyTheme(theme), [theme])
   return (
     <>
       {!isConfigured && (

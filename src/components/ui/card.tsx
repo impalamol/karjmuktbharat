@@ -10,11 +10,11 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-border bg-card hover:border-primary-200',
+        default: 'border-border bg-card hover:border-primary-200 dark:hover:border-white/20',
         /** Glassmorphism: backdrop-blur-xl + bg-white/80 + border-white/20 */
-        glass: 'border-white/20 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 hover:border-primary-200/60',
+        glass: 'border-border/60 bg-glass/80 backdrop-blur-xl supports-[backdrop-filter]:bg-glass/70 hover:border-primary-200/60 dark:border-white/10 dark:hover:border-white/20',
         /** Trust Blue feature card */
-        brand: 'border-primary-700 bg-primary text-primary-foreground hover:border-secondary/60',
+        brand: 'border-[#0F2C61] bg-[#0F2C61] text-white hover:border-secondary/60 dark:border-white/10 dark:bg-[#0B1530]',
       },
     },
     defaultVariants: { variant: 'default' },

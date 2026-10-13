@@ -26,7 +26,7 @@ export default function Bank() {
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('bank_title')}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">{t('bank_title')}</h1>
       {saved && (
         <p role="status" className="flex items-center gap-2 rounded-card bg-accent-50 p-3 text-sm text-accent-700">
           <CheckCircle2 className="size-4" aria-hidden /> {t('bank_saved')}

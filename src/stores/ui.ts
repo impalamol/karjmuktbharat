@@ -1,26 +1,33 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-export type Lang = 'en' | 'mr'
+export type Theme = 'dark' | 'light'
 
 interface UiState {
-  lang: Lang
+  theme: Theme
   sidebarCollapsed: boolean
-  setLang: (l: Lang) => void
-  toggleLang: () => void
+  setTheme: (t: Theme) => void
+  toggleTheme: () => void
   toggleSidebar: () => void
 }
 
-/** UI preferences only. Nothing sensitive is persisted. */
+/** Applies the theme class to <html>. public/theme-init.js does the same before first paint. */
+export function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  root.classList.toggle('dark', theme === 'dark')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#F8FAFC')
+}
+
+/** UI preferences only. Nothing sensitive is persisted. Dark is the default (CRED-style). */
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
-      lang: 'en',
+      theme: 'dark',
       sidebarCollapsed: false,
-      setLang: (lang) => set({ lang }),
-      toggleLang: () => set((s) => ({ lang: s.lang === 'en' ? 'mr' : 'en' })),
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     }),
-    { name: 'kmb-ui', storage: createJSONStorage(() => localStorage) },
+    { name: 'kmb-ui', version: 2, storage: createJSONStorage(() => localStorage), partialize: (s) => ({ theme: s.theme, sidebarCollapsed: s.sidebarCollapsed }) },
   ),
 )

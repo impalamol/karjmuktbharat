@@ -11,7 +11,6 @@ import { TableSkeleton } from '@/components/states/Skeletons'
 import { useTransactions, type Txn } from '@/hooks/queries'
 import { useT, type DictKey } from '@/i18n'
 import { formatDate, formatINR } from '@/lib/format'
-import { useUiStore } from '@/stores/ui'
 
 const TYPE_LABEL: Record<Txn['type'], DictKey> = {
   regular_credit: 'card_you_get',
@@ -29,7 +28,6 @@ const STATUS_VARIANT: Record<Txn['status'], BadgeProps['variant']> = {
 /** 20 rows per page (keyset cursor). Table on md+, cards on mobile. */
 export function PaymentTable() {
   const t = useT()
-  const lang = useUiStore((s) => s.lang)
   const q = useTransactions()
   const [page, setPage] = useState(0)
   const pages = q.data?.pages ?? []
@@ -67,14 +65,14 @@ export function PaymentTable() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04, duration: 0.3, ease: 'easeOut' }}
-                  className="rounded-modal border border-border bg-white/80 p-3 shadow-sm"
+                  className="rounded-modal border border-border bg-glass/80 p-3 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold">{t(TYPE_LABEL[r.type])}</span>
                     <span className="text-lg font-bold tabular text-accent-700">{formatINR(r.amount)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>{formatDate(r.created_at, lang)}</span>
+                    <span>{formatDate(r.created_at)}</span>
                     <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
                   </div>
                   {r.utr_no && <Utr utr={r.utr_no} />}
@@ -96,7 +94,7 @@ export function PaymentTable() {
                 <TableBody>
                   {rows.map((r, i) => (
                     <MotionTableRow key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04, duration: 0.3 }}>
-                      <TableCell className="sticky left-0 bg-card">{formatDate(r.created_at, lang)}</TableCell>
+                      <TableCell className="sticky left-0 bg-card">{formatDate(r.created_at)}</TableCell>
                       <TableCell>{t(TYPE_LABEL[r.type])}</TableCell>
                       <TableCell className="text-right font-semibold tabular">{formatINR(r.amount)}</TableCell>
                       <TableCell className="font-mono text-xs">{r.utr_no ? <Utr utr={r.utr_no} inline /> : '—'}</TableCell>

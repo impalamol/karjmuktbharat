@@ -15,7 +15,7 @@ export function useBroadcast<T = unknown>(topic: 'pools' | 'rescue_wall', event:
   }, 1000)
 
   useEffect(() => {
-    if (!enabled || !isConfigured) return
+    if (!enabled || !isConfigured || import.meta.env.MODE === 'demo') return
     const channel = supabase
       .channel(topic, { config: { broadcast: { self: false } } })
       .on('broadcast', { event }, ({ payload }) => {

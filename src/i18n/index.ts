@@ -1,12 +1,10 @@
-import { useCallback } from 'react'
-import { useUiStore } from '@/stores/ui'
-import { en, mr, type DictKey } from './dictionary'
+import { en, type DictKey } from './dictionary'
 
-const dicts = { en, mr } as const
+/** English is the only UI language. Copy still lives in one dictionary so it stays easy to edit. */
+const t = (key: DictKey) => en[key]
 
 export function useT() {
-  const lang = useUiStore((s) => s.lang)
-  return useCallback((key: DictKey) => dicts[lang][key], [lang])
+  return t
 }
 
 export type { DictKey }

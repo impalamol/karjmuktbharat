@@ -10,7 +10,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
   return (
     <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 px-3 md:hidden" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
       <ul
-        className="mx-auto grid h-16 max-w-lg rounded-modal border border-white/10 bg-primary/95 p-1 shadow-lg backdrop-blur-xl"
+        className="mx-auto grid h-16 max-w-lg rounded-modal border border-white/10 bg-neutral-900/95 p-1 dark:bg-neutral-100/95 shadow-lg backdrop-blur-xl"
         style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
       >
         {items.map(({ to, label, icon: Icon }) => (
@@ -22,7 +22,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
               className={({ isActive }) =>
                 cn(
                   'relative z-10 flex h-full min-h-11 flex-col items-center justify-center gap-0.5 rounded-card text-xs font-medium transition-colors',
-                  isActive ? 'text-primary' : 'text-primary-100 hover:text-white',
+                  isActive ? 'text-secondary-foreground' : 'text-neutral-400 hover:text-white dark:text-neutral-500',
                 )
               }
             >

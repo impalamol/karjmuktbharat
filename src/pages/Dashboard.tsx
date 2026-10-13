@@ -23,7 +23,6 @@ import { calculateInterestSaved, calculateRegularPerUser } from '@/lib/calculati
 import { celebrate } from '@/lib/confetti'
 import { formatDate, formatINR, formatMonths, formatNumber } from '@/lib/format'
 import { fadeUp, staggerContainer } from '@/lib/motion'
-import { useUiStore } from '@/stores/ui'
 
 const SEATS = 1000
 
@@ -88,7 +87,6 @@ function nextCreditDate(now = new Date()) {
 
 export default function Dashboard() {
   const t = useT()
-  const lang = useUiStore((s) => s.lang)
   const profile = useProfile()
   const loans = useMyLoans()
   const loan = loans.data?.find((l) => l.verification_status === 'verified') ?? loans.data?.[0]
@@ -107,7 +105,7 @@ export default function Dashboard() {
     <div className="flex flex-col gap-6 md:gap-8">
       <m.div initial="hidden" animate="show" variants={fadeUp}>
         <p className="text-sm text-muted-foreground">{t('dash_greeting')},</p>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{firstName ?? t('brand')}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">{firstName ?? t('brand')}</h1>
       </m.div>
 
       {!loan ? (
@@ -141,7 +139,7 @@ export default function Dashboard() {
                 <SpringCounter value={extra} format={formatINR} />
               </p>
               <p className="text-xs text-muted-foreground">
-                {formatDate(nextCreditDate().toISOString(), lang)} · {t('next_credit_d')}
+                {formatDate(nextCreditDate().toISOString())} · {t('next_credit_d')}
               </p>
             </SmallCard>
           </m.div>

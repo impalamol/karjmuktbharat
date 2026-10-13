@@ -65,10 +65,78 @@ export const colors = {
   },
 } as const
 
+/**
+ * Dark theme (CRED-style: near-black canvas, white ink, gold highlights).
+ * Every scale is mirrored, so "50" is always the quietest tint and "900" the strongest ink
+ * in both themes. A class like `bg-primary-50 text-primary` keeps its contrast either way.
+ */
+export const darkColors = {
+  primary: {
+    DEFAULT: '#F4F6FB',
+    foreground: '#0A0A0C',
+    50: '#121826',
+    100: '#1A2438',
+    200: '#26365A',
+    300: '#3B5487',
+    400: '#5E7FC0',
+    500: '#8FAAE0',
+    600: '#B8CBEF',
+    700: '#F4F6FB',
+    800: '#F8FAFD',
+    900: '#FFFFFF',
+  },
+  secondary: {
+    DEFAULT: '#FFB703',
+    foreground: '#0A0A0C',
+    50: '#1E1806',
+    100: '#2E2408',
+    500: '#FFB703',
+    600: '#FFC433',
+    700: '#FFD166',
+    800: '#FFD978',
+  },
+  accent: {
+    DEFAULT: '#10B981',
+    foreground: '#03140D',
+    50: '#0B1D16',
+    100: '#0F2A1F',
+    600: '#10B981',
+    700: '#34D399',
+  },
+  neutral: {
+    50: '#0A0A0C',
+    100: '#141417',
+    200: '#232328',
+    300: '#34343B',
+    400: '#5A5A64',
+    500: '#9A9AA5',
+    600: '#B8B8C2',
+    700: '#D4D4DB',
+    800: '#E8E8ED',
+    900: '#F5F5F7',
+  },
+  semantic: {
+    error: '#F87171',
+    errorForeground: '#1A0505',
+    warning: '#FBBF24',
+    warningForeground: '#0A0A0C',
+    success: '#34D399',
+  },
+} as const
+
+/** Surfaces that are not part of a scale. */
+export const surfaces = {
+  light: { background: colors.neutral[50], card: '#FFFFFF', glass: '#FFFFFF', border: colors.neutral[200], input: colors.neutral[300] },
+  dark: { background: '#000000', card: '#0E0E11', glass: '#16161A', border: '#1F1F24', input: '#34343B' },
+} as const
+
+export type ThemeName = keyof typeof surfaces
+
 export const typography = {
   fontFamily: {
-    sans: ['Inter', '"Noto Sans Devanagari"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-    devanagari: ['"Noto Sans Devanagari"', 'Inter', 'system-ui', 'sans-serif'],
+    sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+    /** Editorial serif for display headlines (CRED-style) */
+    display: ['Fraunces', 'Georgia', 'Times New Roman', 'serif'],
   },
   /**
    * Type scale 12 / 14 / 16 / 18 / 20 / 24 / 30 / 36 px.
@@ -84,6 +152,10 @@ export const typography = {
     '2xl': ['clamp(1.25rem, 1.15rem + 0.6vw, 1.5rem)', { lineHeight: '2rem' }], // 20 -> 24
     '3xl': ['clamp(1.5rem, 1.3rem + 1vw, 1.875rem)', { lineHeight: '2.25rem' }], // 24 -> 30
     '4xl': ['clamp(1.75rem, 1.45rem + 1.5vw, 2.25rem)', { lineHeight: '2.5rem' }], // 28 -> 36
+    // Display sizes: landing headlines only
+    '5xl': ['clamp(2.25rem, 1.6rem + 3.2vw, 3.75rem)', { lineHeight: '1.05' }], // 36 -> 60
+    '6xl': ['clamp(2.5rem, 1.5rem + 5vw, 5rem)', { lineHeight: '1' }], // 40 -> 80
+    '7xl': ['clamp(2.75rem, 1.2rem + 7.5vw, 7rem)', { lineHeight: '0.95' }], // 44 -> 112
   },
   /** Only these four weights are allowed. */
   fontWeight: {
@@ -134,7 +206,7 @@ export const colorRatio = { surface: 0.6, primary: 0.3, accent: 0.1 } as const
 
 /** Glassmorphism recipe used by Card variant="glass". */
 export const glass = {
-  background: 'rgb(255 255 255 / 0.8)',
+  background: 'rgb(var(--glass) / 0.8)',
   border: 'rgb(255 255 255 / 0.2)',
   blur: '24px', // backdrop-blur-xl
 } as const
@@ -153,9 +225,10 @@ export const radius = {
 /** Only sm, md, lg shadows exist. */
 export const shadows = {
   none: 'none',
-  sm: '0 1px 2px 0 rgb(15 44 97 / 0.06), 0 1px 3px 0 rgb(15 44 97 / 0.08)',
-  md: '0 4px 8px -2px rgb(15 44 97 / 0.10), 0 2px 4px -2px rgb(15 44 97 / 0.06)',
-  lg: '0 12px 24px -6px rgb(15 44 97 / 0.16), 0 4px 8px -4px rgb(15 44 97 / 0.08)',
+  // --shadow is navy in light mode and pure black in dark mode (set in tailwind.config.ts)
+  sm: '0 1px 2px 0 rgb(var(--shadow) / 0.06), 0 1px 3px 0 rgb(var(--shadow) / 0.08)',
+  md: '0 4px 8px -2px rgb(var(--shadow) / 0.10), 0 2px 4px -2px rgb(var(--shadow) / 0.06)',
+  lg: '0 12px 24px -6px rgb(var(--shadow) / 0.16), 0 4px 8px -4px rgb(var(--shadow) / 0.08)',
 } as const
 
 export const breakpoints = {
@@ -182,5 +255,5 @@ export const motion = {
   softSpring: { type: 'spring', stiffness: 120, damping: 20 } as const,
 } as const
 
-export const tokens = { colors, colorRatio, glass, focusRing, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
+export const tokens = { colors, darkColors, surfaces, colorRatio, glass, focusRing, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
 export default tokens

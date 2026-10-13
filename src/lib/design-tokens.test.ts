@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colors } from './design-tokens'
+import { colors, darkColors, surfaces } from './design-tokens'
 
 /** WCAG 2.1 relative luminance and contrast ratio. */
 const lum = (hex: string) => {
@@ -32,6 +32,29 @@ const pairs: [string, string, string][] = [
 
 describe('WCAG AA contrast (4.5:1 for normal text)', () => {
   it.each(pairs)('%s', (_, fg, bg) => {
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+const D = darkColors
+const BG = surfaces.dark.background
+const CARD = surfaces.dark.card
+const darkPairs: [string, string, string][] = [
+  ['body text', D.neutral[900], BG],
+  ['muted text on page', D.neutral[500], BG],
+  ['muted text on card', D.neutral[500], CARD],
+  ['primary (white) button', D.primary.foreground, D.primary.DEFAULT],
+  ['primary text on card', D.primary.DEFAULT, CARD],
+  ['primary text on primary tint', D.primary.DEFAULT, D.primary[50]],
+  ['gold button', D.secondary.foreground, D.secondary.DEFAULT],
+  ['gold text on card', D.secondary[800], CARD],
+  ['success button', D.accent.foreground, D.accent[700]],
+  ['green text on green tint', D.accent[700], D.accent[50]],
+  ['error text', D.semantic.error, CARD],
+]
+
+describe('WCAG AA contrast in the dark theme', () => {
+  it.each(darkPairs)('%s', (_, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5)
   })
 })
