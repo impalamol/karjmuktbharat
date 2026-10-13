@@ -196,9 +196,12 @@ export const sizes = {
   10: '40px',
   24: '96px',
   48: '192px',
+  phone: '248px', // landing phone mockup
+  'phone-h': '512px',
   56: '224px', // chart height (mobile)
   64: '256px', // chart / grid height
   80: '320px', // list viewport
+  96: '384px', // landing phones at 75% scale
 } as const
 
 /** 60-30-10 rule: 60% white / slate-50 surfaces, 30% Trust Blue, 10% Gold accents. */
@@ -219,7 +222,29 @@ export const radius = {
   sm: '4px',
   card: '8px',
   modal: '12px',
+  /** Landing bento cards and the mobile app's cards */
+  bento: '32px',
+  /** Phone mockup frame */
+  frame: '40px',
   pill: '9999px',
+} as const
+
+/**
+ * Pastel palette shared with the mobile app (mobile/src/theme/tokens.js). Fixed in both
+ * themes: these surfaces always carry black text, so contrast holds in light and dark.
+ */
+export const pastel = {
+  ink: '#000000',
+  mint: '#CFF5E7',
+  mintStrong: '#A8E6CF',
+  mintInk: '#0B6B4B',
+  beige: '#FFF4D6',
+  beigeStrong: '#F5E6C8',
+  sky: '#D6EFFF',
+  skyStrong: '#C6D8FF',
+  lavender: '#E2D1F9',
+  violet: '#6D5DF6',
+  blue: '#3B82F6',
 } as const
 
 /** Only sm, md, lg shadows exist. */
@@ -255,5 +280,5 @@ export const motion = {
   softSpring: { type: 'spring', stiffness: 120, damping: 20 } as const,
 } as const
 
-export const tokens = { colors, darkColors, surfaces, colorRatio, glass, focusRing, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
+export const tokens = { colors, darkColors, pastel, surfaces, colorRatio, glass, focusRing, typography, spacing, sizes, radius, shadows, breakpoints, layout, motion } as const
 export default tokens

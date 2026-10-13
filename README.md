@@ -99,6 +99,25 @@ On Vercel, set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_RAZORPAY_KEY
 
 Point the Razorpay webhook (payout.* and token.* events) at `https://<project>.supabase.co/functions/v1/razorpay-webhook`.
 
+## Mobile app (iOS / Android)
+
+`mobile/` is an Expo SDK 51 app (expo-router, NativeWind, Reanimated 3, Moti) on the same Supabase backend, tables, RPCs and RLS as the web app.
+
+```bash
+cd mobile
+npm install
+cp .env.example .env   # leave the keys empty to run on sample data (demo mode)
+npx expo start         # scan the QR with Expo Go, or press i / a for a simulator
+npm run typecheck
+```
+
+- Screens: onboarding, phone OTP login, dashboard, rescue analytics, UTR check (QR scan), bank, profile, refer, transactions, admin.
+- Auth tokens live in the Keychain / Keystore via `expo-secure-store` (chunked adapter). Optional Face ID / fingerprint app lock.
+- Bank changes need Face ID plus the member's authenticator code (AAL2), then admin re-verification.
+- Lists use keyset pagination and virtualised `FlatList`s. Rescue counts per day come from the `rescue_daily` RPC.
+- `src/lib/calculations.ts` is copied into `mobile/src/lib/` by `npm run sync:shared`; CI fails if the copies drift.
+- Store builds: `npx eas build -p ios` / `-p android` (needs an Expo account).
+
 ## Checks
 
 ```bash

@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 import animate from 'tailwindcss-animate'
 import plugin from 'tailwindcss/plugin'
-import { colors, darkColors, surfaces, typography, spacing, sizes, radius, shadows, breakpoints, focusRing } from './src/lib/design-tokens'
+import { colors, darkColors, pastel, surfaces, typography, spacing, sizes, radius, shadows, breakpoints, focusRing } from './src/lib/design-tokens'
 
 type Palette = typeof colors | typeof darkColors
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(' ')
@@ -73,6 +73,7 @@ export default {
         destructive: { DEFAULT: v('error'), foreground: v('errorForeground') },
         warning: { DEFAULT: v('warning'), foreground: v('warningForeground') },
         success: { DEFAULT: v('success'), foreground: v('accent-foreground') },
+        pastel,
       },
       width: sizes,
       height: sizes,

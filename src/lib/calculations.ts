@@ -208,6 +208,15 @@ export function calculateTargetTotals(rules = BLOCK_RULES): PlatformTotals {
   return calculatePlatformTotals({ education: rules.education.targetUsers, home: rules.home.targetUsers }, rules)
 }
 
+/**
+ * Rescues per month when every block's rescue money is pooled at platform level
+ * (5L education members: 340 Cr / 3 L = 11,333 students; 20L home: 1,120 Cr / 5 L = 22,400 homes).
+ * Higher than summing per-block capacity, because no block's leftover is wasted.
+ */
+export function calculatePooledRescueCapacity(blockType: BlockType, users: number, rules = BLOCK_RULES): number {
+  return Math.floor(calculateTypeTotals(blockType, users, rules).rescuePool / rule(blockType, rules).avgRescueTicket)
+}
+
 // ---------------------------------------------------------------------------
 // Loan maths
 // ---------------------------------------------------------------------------
