@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  calculatePooledRescueCapacity,
   BLOCK_RULES,
   CRORE,
   LAKH,
@@ -159,5 +160,12 @@ describe('loan maths', () => {
     expect(pts.length).toBeLessThanOrEqual(62)
     expect(pts[0]).toMatchObject({ month: 0, withoutKarjmukt: 10 * LAKH, withKarjmukt: 10 * LAKH })
     expect(pts.at(-1)).toMatchObject({ month: 120, withoutKarjmukt: 0, withKarjmukt: 0 })
+  })
+})
+
+describe('calculatePooledRescueCapacity', () => {
+  it('pools rescue money across all blocks at the 25 lakh target', () => {
+    expect(calculatePooledRescueCapacity('education', 500_000)).toBe(11_333)
+    expect(calculatePooledRescueCapacity('home', 2_000_000)).toBe(22_400)
   })
 })

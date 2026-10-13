@@ -120,6 +120,8 @@ begin;
 select pg_temp.as_user(null);
 select pg_temp.expect((select count(*) from public.pools) = 2, 'anon can read pools');
 select pg_temp.expect((select count(*) from public.platform_stats()) = 2, 'anon can call platform_stats');
+select pg_temp.expect((select count(*) from public.rescue_daily('home', 30)) = 30, 'anon can read 30 days of rescue counts');
+select pg_temp.expect((select count(*) from public.rescue_daily('home', 99999)) = 366, 'rescue_daily caps the range at 366 days');
 do $$ begin
   perform count(*) from public.profiles;
   raise exception 'FAIL: anon read profiles';

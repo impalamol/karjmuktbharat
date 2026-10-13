@@ -1,56 +1,46 @@
-import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { m, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import {
   ArrowRight,
   BadgeCheck,
   Fingerprint,
-  Gift,
   GraduationCap,
   HeartHandshake,
   Home as HomeIcon,
-  Landmark,
   Lock,
   ReceiptText,
   ShieldCheck,
+  Smartphone,
   Users,
   type LucideIcon,
 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { SpringCounter } from '@/components/brand/SpringCounter'
-import { usePlatformStats } from '@/hooks/queries'
-import { calculateBlockBreakdown, calculateRegularPerUser, calculateTargetTotals } from '@/lib/calculations'
-import { formatCompactINR, formatCompactNumber, formatINR, formatNumber } from '@/lib/format'
-import { fadeUp, float, reveal, staggerContainer } from '@/lib/motion'
-import { isConfigured } from '@/lib/env'
+import { FloatingShapes, Topography } from '@/features/landing/Backdrop'
+import { MiniToggle, PhoneTrio } from '@/features/landing/PhoneMockups'
+import { BLOCK_RULES, CRORE, calculateBlockBreakdown, calculatePooledRescueCapacity, calculateTypeTotals } from '@/lib/calculations'
+import { formatCompactINR, formatINR, formatNumber } from '@/lib/format'
+import { fadeUp, reveal, staggerContainer } from '@/lib/motion'
 import { cn, scrollToSection } from '@/lib/utils'
-import { darkColors } from '@/lib/design-tokens'
-import { useThemeColors } from '@/lib/theme'
 
-const HERO_YEARS = 7
 const edu = calculateBlockBreakdown('education')
 const home = calculateBlockBreakdown('home')
+const homeTotals = calculateTypeTotals('home', BLOCK_RULES.home.targetUsers)
+const houses = calculatePooledRescueCapacity('home', BLOCK_RULES.home.targetUsers)
+const students = calculatePooledRescueCapacity('education', BLOCK_RULES.education.targetUsers)
 
 /**
- * CRED-inspired landing: a dark editorial page (with a light theme) built from
- * full-bleed sections, serif display type and scroll-linked motion.
+ * One-page landing in the app's design language: black topographic hero with floating
+ * pastel shapes and three phone mockups, then a bento grid of 32px-radius cards.
  */
 export default function Landing() {
   return (
     <div className="-mt-14 md:-mt-16">
       <Hero />
-      <Manifesto />
-      <Showcase />
-      <PoolRing />
-      <Products />
-      <Rescue />
-      <Security />
-      <Proof />
-      <Door />
+      <Numbers />
+      <HowItWorks />
       <Faq />
+      <GetApp />
     </div>
   )
 }
@@ -58,644 +48,380 @@ export default function Landing() {
 // ---------------------------------------------------------------------------
 // Shared pieces
 // ---------------------------------------------------------------------------
-function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <p className={cn('text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground', className)}>{children}</p>
-}
-
-function Display({ children, className, as: Tag = 'h2', id }: { children: React.ReactNode; className?: string; as?: 'h1' | 'h2'; id?: string }) {
+function Bento({ className, children, ...props }: React.ComponentProps<typeof m.div>) {
   return (
-    <Tag id={id} className={cn('font-display font-semibold tracking-tight text-foreground', className)}>
+    <m.div variants={fadeUp} className={cn('relative overflow-hidden rounded-bento p-6 md:p-8', className)} {...props}>
       {children}
-    </Tag>
-  )
-}
-
-/** Paragraph whose words light up one by one as it scrolls through the viewport. */
-function ScrollText({ text, className }: { text: string; className?: string }) {
-  const ref = useRef<HTMLParagraphElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.5'] })
-  const words = text.split(' ')
-  return (
-    <p ref={ref} className={cn('flex flex-wrap font-display', className)}>
-      {words.map((w, i) => (
-        <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} still={!!reduce}>
-          {w}
-        </Word>
-      ))}
-    </p>
-  )
-}
-
-function Word({ progress, range, still, children }: { progress: MotionValue<number>; range: [number, number]; still: boolean; children: string }) {
-  const opacity = useTransform(progress, range, still ? [1, 1] : [0.18, 1])
-  return (
-    <m.span style={{ opacity }} className="mr-[0.28em]">
-      {children}
-    </m.span>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 1. Hero: corridor of light, serif headline, parallax, spring counter
-// ---------------------------------------------------------------------------
-function Corridor() {
-  const pillars = 'repeating-linear-gradient(90deg, rgb(var(--neutral-200)) 0 34px, rgb(var(--neutral-100)) 34px 40px, transparent 40px 78px)'
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden [perspective:900px]">
-      <div className="absolute inset-y-0 left-0 w-1/2 origin-left [transform:rotateY(62deg)]" style={{ backgroundImage: pillars }} />
-      <div className="absolute inset-y-0 right-0 w-1/2 origin-right [transform:rotateY(-62deg)]" style={{ backgroundImage: pillars }} />
-      <m.div
-        className="absolute bottom-0 left-1/2 h-3/4 w-2/3 -translate-x-1/2 bg-[radial-gradient(50%_60%_at_50%_100%,rgb(255_183_3/0.35),transparent)]"
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(40%_50%_at_50%_45%,transparent,rgb(var(--background))_85%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-b from-transparent to-background" />
-    </div>
-  )
-}
-
-function Hero() {
-  const ref = useRef<HTMLElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 160])
-  const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
-  const heroTotal = calculateRegularPerUser('education') * 12 * HERO_YEARS
-
-  return (
-    <section ref={ref} className="relative isolate flex min-h-dvh items-center overflow-hidden pt-16" aria-labelledby="hero-title">
-      <Corridor />
-      <m.div style={{ y, opacity }} className="container relative flex flex-col items-center gap-6 py-16 text-center" initial="hidden" animate="show" variants={staggerContainer(0.1, 0.1)}>
-        <m.div variants={fadeUp}>
-          <Badge variant="outline" className="gap-2 rounded-pill border-border/60 bg-background/40 px-4 py-1 backdrop-blur-xl">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-pill bg-accent opacity-75" />
-              <span className="relative inline-flex size-2 rounded-pill bg-accent" />
-            </span>
-            Karj Se Mukti, Bharat Ki Pragati
-          </Badge>
-        </m.div>
-        <m.div variants={fadeUp}>
-          <Display as="h1" id="hero-title" className="max-w-4xl text-6xl lg:text-7xl">
-            crafted for those
-            <br />
-            <span className="bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">who repay.</span>
-          </Display>
-        </m.div>
-        <m.p variants={fadeUp} className="max-w-xl text-base text-muted-foreground md:text-lg">
-          KARJMUKTBHARAT is a members-only community of verified borrowers. Together with CSR partners, we pay your education or home loan down
-          every month, straight into your bank loan account.
-        </m.p>
-        <m.div variants={fadeUp} className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg" variant="glow" className="w-full rounded-pill sm:w-auto">
-            <Link to="/onboard">
-              Join your block <ArrowRight aria-hidden />
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="ghost" className="w-full rounded-pill sm:w-auto">
-            <a href="#story" onClick={(e) => scrollToSection(e, 'story')}>
-              See how it works
-            </a>
-          </Button>
-        </m.div>
-        <m.div variants={fadeUp} className="flex flex-col items-center gap-1 pt-6">
-          <SpringCounter value={heroTotal} format={formatINR} className="font-display text-4xl font-semibold tabular text-secondary-800 md:text-5xl" />
-          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            extra paid into an education loan over {HERO_YEARS} years
-          </span>
-        </m.div>
-      </m.div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 2. Manifesto: words light up on scroll
-// ---------------------------------------------------------------------------
-function Manifesto() {
-  return (
-    <section id="story" className="scroll-mt-16 py-16" aria-label="Our story">
-      <div className="container flex max-w-4xl flex-col gap-8">
-        <Eyebrow>not every loan should take a lifetime.</Eyebrow>
-        <ScrollText
-          className="text-3xl leading-tight md:text-5xl"
-          text="the story of karjmuktbharat begins with trust. we believe people who repay their loans every month deserve better: shorter loans, less interest, and a community that has their back. one block. one thousand borrowers. one crore every month. this is the status quo we're breaking."
-        />
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 3. Showcase: three phones fan out on scroll
-// ---------------------------------------------------------------------------
-function PhoneScreen({ variant }: { variant: 'loan' | 'block' | 'proof' }) {
-  return (
-    <div className="dark flex h-full flex-col gap-3 bg-background p-4 text-foreground">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>9:41</span>
-        <span className="font-semibold text-secondary">KARJMUKT</span>
-      </div>
-      {variant === 'loan' && (
-        <>
-          <p className="text-xs text-muted-foreground">loan closed</p>
-          <div className="relative mx-auto size-24">
-            <svg viewBox="0 0 100 100" className="size-24 -rotate-90" aria-hidden>
-              <circle cx="50" cy="50" r="42" fill="none" stroke={darkColors.neutral[200]} strokeWidth="8" />
-              <circle cx="50" cy="50" r="42" fill="none" stroke={darkColors.accent[700]} strokeWidth="8" strokeLinecap="round" strokeDasharray="264" strokeDashoffset="160" />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold">39%</span>
-          </div>
-          <div className="rounded-card bg-neutral-100 p-3">
-            <p className="text-xs text-muted-foreground">interest saved</p>
-            <p className="text-lg font-bold text-accent-700">₹1,61,158</p>
-          </div>
-          <div className="rounded-card bg-neutral-100 p-3">
-            <p className="text-xs text-muted-foreground">next credit</p>
-            <p className="text-lg font-bold">+₹3,200</p>
-          </div>
-        </>
-      )}
-      {variant === 'block' && (
-        <>
-          <p className="text-xs text-muted-foreground">block #42 · 640 / 1,000</p>
-          <div className="grid grid-cols-8 gap-1">
-            {Array.from({ length: 64 }, (_, i) => (
-              <span key={i} className={cn('aspect-square rounded-pill', i === 27 ? 'bg-secondary' : i < 41 ? 'bg-primary-500' : 'border border-dashed border-neutral-400')} />
-            ))}
-          </div>
-          <div className="rounded-card bg-neutral-100 p-3">
-            <p className="text-xs text-muted-foreground">rescued this month</p>
-            <p className="text-lg font-bold">22 students</p>
-          </div>
-        </>
-      )}
-      {variant === 'proof' && (
-        <>
-          <p className="text-xs text-muted-foreground">payment proof</p>
-          {[3200, 3200, 1500, 3200, 3200].map((a, i) => (
-            <div key={i} className="flex items-center justify-between rounded-card bg-neutral-100 px-3 py-2 text-xs">
-              <span className="font-mono text-muted-foreground">UTR ···{4821 + i}</span>
-              <span className={a === 1500 ? 'font-semibold' : 'font-semibold text-accent-700'}>{a === 1500 ? '-' : '+'}₹{a.toLocaleString('en-IN')}</span>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  )
-}
-
-function Phone({ variant, className, style }: { variant: 'loan' | 'block' | 'proof'; className?: string; style?: React.ComponentProps<typeof m.div>['style'] }) {
-  return (
-    <m.div
-      style={style}
-      className={cn('absolute aspect-[9/19] w-48 overflow-hidden rounded-[2.25rem] border-[6px] border-neutral-800 bg-black shadow-lg ring-1 ring-white/10 md:w-56', className)}
-    >
-      <div className="absolute left-1/2 top-2 z-10 h-4 w-16 -translate-x-1/2 rounded-pill bg-black" />
-      <div className="h-full pt-6">
-        <PhoneScreen variant={variant} />
-      </div>
     </m.div>
   )
 }
 
-function Showcase() {
-  const ref = useRef<HTMLElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
-  const spread = useTransform(scrollYProgress, [0, 1], [0, reduce ? 1 : 1])
-  const leftX = useTransform(spread, [0, 1], ['-10%', '-78%'])
-  const rightX = useTransform(spread, [0, 1], ['10%', '78%'])
-  const sideRotate = useTransform(scrollYProgress, [0, 1], [0, 12])
-  const negRotate = useTransform(sideRotate, (r) => -r)
-  const centerY = useTransform(scrollYProgress, [0, 1], [80, 0])
-
+function SectionTitle({ eyebrow, title, id }: { eyebrow: string; title: string; id: string }) {
   return (
-    <section ref={ref} className="relative overflow-hidden py-16" aria-labelledby="showcase-title">
-      <div className="container flex flex-col items-center gap-12">
-        <div aria-hidden className="relative h-[460px] w-full max-w-md md:h-[540px]">
-          <div className="absolute inset-0 flex justify-center">
-            <Phone variant="proof" className="top-8 opacity-80" style={{ x: leftX, rotate: negRotate }} />
-            <Phone variant="block" className="top-8 opacity-80" style={{ x: rightX, rotate: sideRotate }} />
-            <Phone variant="loan" className="z-10 shadow-[0_40px_80px_-20px_rgb(255_183_3/0.35)]" style={{ y: centerY }} />
-          </div>
-        </div>
-        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex max-w-2xl flex-col items-center gap-4 text-center">
-          <m.div variants={fadeUp}>
-            <Display id="showcase-title" className="text-5xl">
-              all that you deserve.
-              <br />
-              and some more.
-            </Display>
-          </m.div>
-          <m.p variants={fadeUp} className="text-muted-foreground">
-            Once you are a member, every month moves your loan closer to zero. Watch your closure ring fill, your block grow and every rupee
-            arrive with a UTR you can verify.
-          </m.p>
-        </m.div>
-      </div>
-    </section>
+    <m.div {...reveal} variants={fadeUp} className="flex flex-col gap-2">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{eyebrow}</p>
+      <h2 id={id} className="text-5xl font-bold tracking-tight">
+        {title}
+      </h2>
+    </m.div>
   )
 }
 
-// ---------------------------------------------------------------------------
-// 4. Pool ring: a slowly turning segmented ring with the block maths
-// ---------------------------------------------------------------------------
-const SEGMENTS = 48
-
-function PoolRing() {
-  const reduce = useReducedMotion()
-  const c = useThemeColors()
+/** White pill with a black circle arrow: the app's primary button. */
+function GetStarted() {
   return (
-    <section className="relative overflow-hidden py-16" aria-labelledby="ring-title">
-      <div className="container grid items-center gap-12 lg:grid-cols-2">
-        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex flex-col gap-4">
-          <m.div variants={fadeUp}>
-            <Display id="ring-title" className="text-5xl">
-              do more with
-              <br />
-              your loan.
-            </Display>
-          </m.div>
-          <m.p variants={fadeUp} className="max-w-md text-muted-foreground">
-            Every month 1,000 members and our CSR partners fill a {formatCompactINR(edu.totalPool)} block. 80% of the CSR money rescues families
-            facing auction. The rest goes straight into every member's loan account.
-          </m.p>
-          <m.dl variants={fadeUp} className="grid max-w-md grid-cols-2 gap-4 pt-2">
-            {[
-              ['Education block', `+${formatINR(edu.regularPerUser)}/mo`],
-              ['Home block', `+${formatINR(home.regularPerUser)}/mo`],
-              ['Students rescued', `${edu.rescueCapacity} per block`],
-              ['Homes rescued', `${home.rescueCapacity} per block`],
-            ].map(([k, v]) => (
-              <div key={k} className="border-l-2 border-secondary pl-3">
-                <dt className="text-xs uppercase tracking-wider text-muted-foreground">{k}</dt>
-                <dd className="text-lg font-semibold tabular">{v}</dd>
-              </div>
-            ))}
-          </m.dl>
-        </m.div>
-        <div aria-hidden className="relative mx-auto aspect-square w-full max-w-md">
-          <div className="absolute inset-[18%] rounded-pill bg-[radial-gradient(circle,rgb(255_183_3/0.18),transparent_70%)]" />
-          <m.svg viewBox="0 0 200 200" className="absolute inset-0" animate={reduce ? undefined : { rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}>
-            {Array.from({ length: SEGMENTS }, (_, i) => {
-              const hot = i % 12 < 3
-              return (
-                <rect
-                  key={i}
-                  x="97"
-                  y="6"
-                  width="6"
-                  height="26"
-                  rx="2"
-                  transform={`rotate(${(i * 360) / SEGMENTS} 100 100)`}
-                  fill={hot ? (i % 24 < 3 ? '#FFB703' : '#10B981') : c.neutral[300]}
-                  opacity={hot ? 1 : 0.7}
-                />
-              )
-            })}
-          </m.svg>
-          <m.svg viewBox="0 0 200 200" className="absolute inset-[16%]" animate={reduce ? undefined : { rotate: -360 }} transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}>
-            {Array.from({ length: 36 }, (_, i) => (
-              <rect key={i} x="98" y="8" width="4" height="14" rx="2" transform={`rotate(${i * 10} 100 100)`} fill={c.neutral[400]} opacity={0.5} />
-            ))}
-          </m.svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-4xl font-semibold">₹1 Cr</span>
-            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">per block, monthly</span>
-          </div>
-        </div>
-      </div>
-    </section>
+    <Link
+      to="/onboard"
+      className="group inline-flex h-14 items-center gap-4 rounded-pill border border-white bg-white pl-6 pr-2 text-base font-semibold text-black transition-transform hover:scale-[1.02] active:scale-95"
+    >
+      Get Started
+      <span className="flex size-10 items-center justify-center rounded-pill bg-black text-white transition-transform group-hover:translate-x-1">
+        <ArrowRight className="size-4" aria-hidden />
+      </span>
+    </Link>
   )
 }
 
-// ---------------------------------------------------------------------------
-// 5. Products: horizontal snap carousel of vivid cards
-// ---------------------------------------------------------------------------
-interface Product {
-  eyebrow: string
-  title: string
-  icon: LucideIcon
-  art: string
-  glow: string
-}
-
-const PRODUCTS: Product[] = [
-  {
-    eyebrow: 'education block',
-    title: `+${formatINR(edu.regularPerUser)} every month into your education loan`,
-    icon: GraduationCap,
-    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#C026D3,#4C0D5C_55%,#0A0A0C)]',
-    glow: 'shadow-[0_0_60px_rgb(192_38_211/0.6)]',
-  },
-  {
-    eyebrow: 'home block',
-    title: `+${formatINR(home.regularPerUser)} every month into your home loan`,
-    icon: HomeIcon,
-    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#7C3AED,#2E1065_55%,#0A0A0C)]',
-    glow: 'shadow-[0_0_60px_rgb(124_58_237/0.6)]',
-  },
-  {
-    eyebrow: 'rescue fund',
-    title: '80% of CSR money saves families from auction',
-    icon: HeartHandshake,
-    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#10B981,#064E3B_55%,#0A0A0C)]',
-    glow: 'shadow-[0_0_60px_rgb(16_185_129/0.6)]',
-  },
-  {
-    eyebrow: 'direct to bank',
-    title: 'no wallet. every rupee lands with a UTR',
-    icon: ReceiptText,
-    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#2563EB,#172554_55%,#0A0A0C)]',
-    glow: 'shadow-[0_0_60px_rgb(37_99_235/0.6)]',
-  },
-  {
-    eyebrow: 'diwali draw',
-    title: 'one member wins an EMI paid in full',
-    icon: Gift,
-    art: 'bg-[radial-gradient(80%_60%_at_50%_100%,#F59E0B,#78350F_55%,#0A0A0C)]',
-    glow: 'shadow-[0_0_60px_rgb(245_158_11/0.6)]',
-  },
-]
-
-function Products() {
-  return (
-    <section className="py-16" aria-labelledby="products-title">
-      <div className="container flex flex-col gap-8">
-        <m.div {...reveal} variants={fadeUp}>
-          <Display id="products-title" className="text-5xl">
-            pay it off.
-            <br />
-            bit by bit.
-          </Display>
-        </m.div>
-      </div>
-      <m.ul
-        {...reveal}
-        variants={staggerContainer(0.1)}
-        className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 md:px-6 xl:px-8 2xl:px-[calc((100vw_-_1440px)/2_+_2rem)]"
-        aria-label="What members get"
-      >
-        {PRODUCTS.map((p, i) => (
-          <m.li key={p.eyebrow} variants={fadeUp} className="shrink-0 snap-start">
-            <m.div
-              whileHover={{ y: -8 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-              className={cn('dark relative flex h-[420px] w-64 flex-col overflow-hidden rounded-modal border border-white/10 p-6 text-foreground md:w-80', p.art)}
-            >
-              <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
-                <p.icon className="size-4" aria-hidden /> {p.eyebrow}
-              </span>
-              <p className="pt-4 text-xl font-semibold leading-snug text-white">{p.title}</p>
-              <Link to="/onboard" className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80 hover:text-white">
-                know more <ArrowRight className="size-3" aria-hidden />
-              </Link>
-              <m.div {...float(i * 0.4)} className="mt-auto flex justify-center">
-                <span className={cn('flex size-24 items-center justify-center rounded-pill border border-white/20 bg-white/10 backdrop-blur-xl', p.glow)}>
-                  <p.icon className="size-10 text-white" aria-hidden />
-                </span>
-              </m.div>
-            </m.div>
-          </m.li>
-        ))}
-      </m.ul>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 6. Rescue: floating spheres + live counters
-// ---------------------------------------------------------------------------
-const SPHERES = [
-  { size: 'size-24 md:size-48', pos: 'left-[-4%] top-[8%]', delay: 0 },
-  { size: 'size-16 md:size-24', pos: 'left-[22%] top-[2%]', delay: 0.8 },
-  { size: 'size-20 md:size-48', pos: 'right-[-2%] top-[4%]', delay: 0.4 },
-  { size: 'size-10 md:size-16', pos: 'right-[24%] top-[18%]', delay: 1.6 },
-  { size: 'size-20 md:size-48', pos: 'left-[6%] bottom-[2%]', delay: 1.2 },
-  { size: 'size-24 md:size-48', pos: 'right-[4%] bottom-[-6%]', delay: 2 },
-]
-
-function Rescue() {
-  const ref = useRef<HTMLElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], [reduce ? 0 : 60, reduce ? 0 : -60])
-  const { totals, rescued, paidOut, isLoading } = usePlatformStats()
-  const stats = [
-    { label: 'members', value: totals.users, fmt: formatCompactNumber, icon: Users },
-    { label: 'blocks', value: totals.blocks, fmt: formatNumber, icon: BadgeCheck },
-    { label: 'families rescued', value: rescued, fmt: formatNumber, icon: ShieldCheck },
-    { label: 'paid to loan accounts', value: paidOut, fmt: formatCompactINR, icon: Landmark },
+/** App store badges. The apps are in testing, so they say so instead of linking to a store. */
+function StoreBadges() {
+  const stores: [string, string][] = [
+    ['App Store', 'iPhone'],
+    ['Google Play', 'Android'],
   ]
-
   return (
-    <section ref={ref} className="relative isolate overflow-hidden py-16" aria-labelledby="rescue-title">
-      <m.div aria-hidden style={{ y }} className="pointer-events-none absolute inset-0 -z-10">
-        {SPHERES.map((s, i) => (
-          <m.span
+    <ul className="flex flex-wrap gap-3" aria-label="Mobile apps">
+      {stores.map(([store, os]) => (
+        <li key={store} className="flex h-14 items-center gap-3 rounded-modal border border-white/30 bg-white/5 px-4 text-white backdrop-blur-xl">
+          <Smartphone className="size-5" aria-hidden />
+          <span className="flex flex-col leading-tight">
+            <span className="text-xs text-white/60">{os} app · coming soon</span>
+            <span className="text-sm font-semibold">{store}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 1. Hero
+// ---------------------------------------------------------------------------
+function Hero() {
+  return (
+    <section className="relative isolate overflow-hidden bg-black pt-16 text-white" aria-labelledby="hero-title">
+      <Topography />
+      <FloatingShapes />
+      <div className="container relative grid min-h-dvh items-center gap-12 py-16 lg:grid-cols-2">
+        <m.div className="flex flex-col gap-6" initial="hidden" animate="show" variants={staggerContainer(0.1, 0.1)}>
+          <m.p variants={fadeUp} className="text-sm font-semibold text-pastel-mintStrong">
+            कर्ज से मुक्ति, भारत की प्रगति
+          </m.p>
+          <m.h1 variants={fadeUp} id="hero-title" className="text-6xl font-bold uppercase tracking-tight xl:text-7xl">
+            Karj se mukti, Bharat ki pragati.
+          </m.h1>
+          <m.p variants={fadeUp} className="max-w-md text-base text-white/70 md:text-lg">
+            Join a block of 1,000 verified borrowers. With CSR partners, we pay up to {formatINR(home.regularPerUser)} extra into your loan every
+            month, and rescue members facing auction.
+          </m.p>
+          <m.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
+            <GetStarted />
+            <a href="#how" onClick={(e) => scrollToSection(e, 'how')} className="inline-flex h-14 items-center rounded-pill border border-white/30 px-6 text-base font-semibold hover:bg-white/10">
+              How it works
+            </a>
+          </m.div>
+          <m.div variants={fadeUp}>
+            <StoreBadges />
+          </m.div>
+        </m.div>
+        <PhoneTrio />
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 2. Numbers bento
+// ---------------------------------------------------------------------------
+const CANDLES = [30, 44, 38, 56, 50, 64, 58, 72, 66, 80, 74, 88]
+
+function RescueCandles() {
+  const reduce = useReducedMotion()
+  return (
+    <svg viewBox="0 0 240 100" className="h-24 w-full" aria-hidden>
+      {CANDLES.map((v, i) => {
+        const prev = CANDLES[i - 1] ?? v - 8
+        const up = v >= prev
+        const top = 100 - Math.max(v, prev)
+        return (
+          <m.rect
             key={i}
-            {...float(s.delay)}
-            className={cn(
-              'absolute rounded-pill bg-[radial-gradient(circle_at_30%_25%,rgb(255_255_255/0.95),rgb(var(--neutral-400))_35%,rgb(var(--neutral-200))_70%,rgb(var(--neutral-100)))] shadow-lg',
-              s.size,
-              s.pos,
-            )}
+            x={i * 20 + 5}
+            y={top}
+            width={10}
+            height={Math.abs(v - prev) + 4}
+            rx={2}
+            fill={up ? '#A8E6CF' : '#6B7280'}
+            initial={{ opacity: 0, scaleY: 0 }}
+            whileInView={{ opacity: 1, scaleY: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: reduce ? 0 : i * 0.06, type: 'spring', stiffness: 200, damping: 20 }}
+            style={{ originY: 1 }}
           />
-        ))}
-      </m.div>
-      <div className="container flex flex-col items-center gap-8 py-16 text-center">
-        <m.div {...reveal} variants={fadeUp}>
-          <Display id="rescue-title" className="text-6xl">
-            feel the odds fall
-            <br />
-            in your favour.
-          </Display>
+        )
+      })}
+      <m.path
+        d={CANDLES.map((v, i) => `${i ? 'L' : 'M'}${i * 20 + 10},${100 - v - 6}`).join(' ')}
+        fill="none"
+        stroke="white"
+        strokeOpacity={0.5}
+        strokeWidth={1.5}
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: reduce ? 0 : 1.6, ease: 'easeInOut' }}
+      />
+    </svg>
+  )
+}
+
+const RESCUES: [LucideIcon, string, string, string, string][] = [
+  [HomeIcon, 'Sunita T.', 'Ghar Vachavle · Nashik', '₹5.2L', 'bg-pastel-beigeStrong'],
+  [GraduationCap, 'Amol S.', 'NPA Vachavla · Pune', '₹3L', 'bg-pastel-lavender'],
+  [HomeIcon, 'Kavita J.', 'Ghar Vachavle · Nagpur', '₹4.8L', 'bg-pastel-beigeStrong'],
+]
+
+const SECURITY: [LucideIcon, string][] = [
+  [Lock, 'AES-256 encryption'],
+  [Fingerprint, 'Face ID + 2FA on changes'],
+  [ShieldCheck, 'Aadhaar: last 4 only'],
+  [ReceiptText, 'Audit log on every rupee'],
+]
+
+function Numbers() {
+  return (
+    <section id="story" className="scroll-mt-16 py-16" aria-labelledby="numbers-title">
+      <div className="container flex flex-col gap-8">
+        <SectionTitle eyebrow="your block, your numbers" title="The maths, in plain rupees." id="numbers-title" />
+        <m.div {...reveal} variants={staggerContainer(0.1)} className="grid gap-4 md:grid-cols-6">
+          <Bento className="flex flex-col gap-6 bg-pastel-mint text-pastel-ink md:col-span-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold">Total Karj Mukti</p>
+                <p className="flex flex-wrap items-baseline gap-2">
+                  <SpringCounter value={home.regularPerUser} format={formatINR} className="text-6xl font-bold tracking-tight tabular" />
+                  <span className="text-base font-semibold text-black/60">Extra/mo</span>
+                </p>
+              </div>
+              <span className="whitespace-nowrap rounded-pill bg-white/70 px-3 py-1 text-xs font-semibold">Home loan</span>
+            </div>
+            <p className="max-w-lg text-sm text-black/70">
+              Paid straight into your bank loan account on top of your EMI, every month. Education members get {formatINR(edu.regularPerUser)}. No
+              wallet, and every rupee carries a UTR.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  ['Borrower Pool', home.borrowerPool, 'Auto-pay', 'bg-white/70'],
+                  ['CSR Pool', home.csrPool, 'Rescue alerts', 'bg-pastel-beige'],
+                ] as const
+              ).map(([title, amt, meta, bg]) => (
+                <div key={title} className={cn('flex items-center gap-4 rounded-bento p-4', bg)}>
+                  <div className="flex-1">
+                    <p className="flex justify-between text-sm font-semibold">
+                      {title} <span className="font-bold">{formatCompactINR(amt)}</span>
+                    </p>
+                    <p className="flex justify-between text-xs text-black/60">
+                      <span className="tracking-widest">****9292</span> {meta}
+                    </p>
+                  </div>
+                  <MiniToggle />
+                </div>
+              ))}
+            </div>
+          </Bento>
+
+          <Bento className="flex flex-col justify-between gap-4 bg-black text-white md:col-span-2">
+            <div>
+              <p className="text-sm text-white/60">Rescue Pool / Month</p>
+              <p className="text-5xl font-bold tracking-tight">₹{formatNumber(homeTotals.rescuePool / CRORE)}Cr</p>
+              <p className="text-xs text-white/50">home loans at {formatNumber(BLOCK_RULES.home.targetUsers)} members</p>
+            </div>
+            <RescueCandles />
+          </Bento>
+
+          <Bento className="flex flex-col gap-4 bg-pastel-beige text-pastel-ink md:col-span-2">
+            <p className="text-sm font-semibold">One block</p>
+            <p className="text-4xl font-bold tracking-tight">1,000 members = {formatCompactINR(home.totalPool)}/mo</p>
+            <div className="flex h-3 overflow-hidden rounded-pill bg-white/70" aria-hidden>
+              <m.span className="bg-pastel-ink" initial={{ width: 0 }} whileInView={{ width: '30%' }} viewport={{ once: true }} transition={{ duration: 1 }} />
+              <m.span className="bg-pastel-mintStrong" initial={{ width: 0 }} whileInView={{ width: '70%' }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.2 }} />
+            </div>
+            <p className="text-xs text-black/60">
+              Borrowers {formatCompactINR(home.borrowerPool)} + CSR {formatCompactINR(home.csrPool)}. 80% of CSR funds rescues; the rest joins the regular
+              pool.
+            </p>
+          </Bento>
+
+          <Bento className="flex flex-col justify-between gap-6 bg-pastel-sky text-pastel-ink md:col-span-2">
+            <span className="flex size-12 items-center justify-center rounded-modal bg-white">
+              <HomeIcon className="size-6" aria-hidden />
+            </span>
+            <div>
+              <SpringCounter value={houses} format={formatNumber} className="text-5xl font-bold tracking-tight tabular" />
+              <p className="text-sm font-semibold">Houses saved every month</p>
+            </div>
+          </Bento>
+
+          <Bento className="flex flex-col justify-between gap-6 bg-pastel-lavender text-pastel-ink md:col-span-2">
+            <span className="flex size-12 items-center justify-center rounded-modal bg-white">
+              <GraduationCap className="size-6" aria-hidden />
+            </span>
+            <div>
+              <SpringCounter value={students} format={formatNumber} className="text-5xl font-bold tracking-tight tabular" />
+              <p className="text-sm font-semibold">Students saved every month</p>
+            </div>
+          </Bento>
+
+          <Bento className="flex flex-col gap-2 border border-border bg-card md:col-span-3">
+            <p className="text-2xl font-bold tracking-tight">Rescue Wall</p>
+            <ul className="flex flex-col">
+              {RESCUES.map(([Icon, name, line, amt, bg]) => (
+                <li key={name} className="flex items-center gap-4 py-3">
+                  <span className={cn('flex size-12 items-center justify-center rounded-modal text-black', bg)}>
+                    <Icon className="size-5" aria-hidden />
+                  </span>
+                  <span className="flex flex-1 flex-col">
+                    <span className="font-semibold">{name}</span>
+                    <span className="text-xs text-muted-foreground">{line}</span>
+                  </span>
+                  <span className="font-bold text-accent-700">{amt}</span>
+                </li>
+              ))}
+            </ul>
+          </Bento>
+
+          <Bento className="flex flex-col gap-4 bg-black text-white md:col-span-3">
+            <Topography className="opacity-60" />
+            <span className="relative flex size-12 items-center justify-center rounded-modal bg-pastel-mintStrong text-black">
+              <Lock className="size-5" aria-hidden />
+            </span>
+            <p className="relative text-2xl font-bold tracking-tight">Your data isn&apos;t our business. Keeping it safe is.</p>
+            <ul className="relative flex flex-wrap gap-2">
+              {SECURITY.map(([Icon, label]) => (
+                <li key={label} className="flex items-center gap-2 rounded-pill border border-white/20 px-3 py-2 text-xs">
+                  <Icon className="size-4 text-pastel-mintStrong" aria-hidden /> {label}
+                </li>
+              ))}
+            </ul>
+          </Bento>
         </m.div>
-        <m.p {...reveal} variants={fadeUp} className="max-w-lg text-muted-foreground">
-          When a member's home or degree is at risk, the block steps in. Every month each block rescues {edu.rescueCapacity} students or{' '}
-          {home.rescueCapacity} homes before the bank's deadline.
-        </m.p>
-        <m.dl {...reveal} variants={staggerContainer(0.08)} className="grid w-full max-w-4xl grid-cols-2 gap-4 md:grid-cols-4">
-          {stats.map(({ label, value, fmt, icon: Icon }) => (
-            <m.div key={label} variants={fadeUp} className="flex flex-col items-center gap-2 rounded-modal border border-border/60 bg-glass/70 p-4 backdrop-blur-xl">
-              <Icon className="size-5 text-secondary-800" aria-hidden />
-              <dd className="order-2">
-                {isLoading && isConfigured ? <Skeleton className="h-8 w-20" /> : <SpringCounter value={value} format={fmt} className="font-display text-3xl font-semibold tabular" />}
-              </dd>
-              <dt className="order-3 text-xs uppercase tracking-wider text-muted-foreground">{label}</dt>
-            </m.div>
-          ))}
-        </m.dl>
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// 7. Security
+// 3. How it works
 // ---------------------------------------------------------------------------
-function Security() {
-  const chips: [LucideIcon, string][] = [
-    [Lock, 'AES-256 encryption'],
-    [Fingerprint, 'OTP + 2FA on payouts'],
-    [ShieldCheck, 'Aadhaar: last 4 digits only'],
-    [ReceiptText, 'Audit log on every rupee'],
-  ]
+const STEPS: [LucideIcon, string, string, string][] = [
+  [BadgeCheck, 'Verify your loan', 'Add your education or home loan. We check it with your bank in a few days.', 'bg-pastel-mint'],
+  [
+    Users,
+    'Get a seat in a block',
+    `Your seat sits in a block of 1,000 members. You contribute ${formatINR(edu.borrowerContributionPerUser)} or ${formatINR(home.borrowerContributionPerUser)} a month by eMandate.`,
+    'bg-pastel-beige',
+  ],
+  [HeartHandshake, 'Repay years earlier', 'Every month the pool pays extra into your loan, and rescues members who are about to lose a home or default.', 'bg-pastel-sky'],
+]
+
+function HowItWorks() {
   return (
-    <section className="py-16" aria-labelledby="security-title">
-      <div className="container flex max-w-4xl flex-col items-center gap-8 text-center">
-        <m.span
-          {...reveal}
-          variants={{ hidden: { scale: 0.6, opacity: 0 }, show: { scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 18 } } }}
-          className="flex size-16 items-center justify-center rounded-modal border border-border bg-card shadow-md"
-        >
-          <Lock className="size-6 text-secondary-800" aria-hidden />
-        </m.span>
-        <Eyebrow>
-          <span id="security-title">your data isn't our business. keeping it safe is.</span>
-        </Eyebrow>
-        <ScrollText
-          className="justify-center text-2xl leading-snug text-muted-foreground md:text-4xl"
-          text="your loan account and aadhaar are encrypted and locked away. no wallet, no middleman, no room for mistakes. money only ever moves to the bank account your bank verified."
-        />
-        <m.ul {...reveal} variants={staggerContainer(0.06)} className="flex flex-wrap justify-center gap-2">
-          {chips.map(([Icon, label]) => (
-            <m.li key={label} variants={fadeUp} className="flex items-center gap-2 rounded-pill border border-border px-4 py-2 text-xs font-medium">
-              <Icon className="size-4 text-accent-700" aria-hidden /> {label}
+    <section id="how" className="scroll-mt-16 py-16" aria-labelledby="how-title">
+      <div className="container flex flex-col gap-8">
+        <SectionTitle eyebrow="three steps" title="How it works." id="how-title" />
+        <m.ol {...reveal} variants={staggerContainer(0.1)} className="grid gap-4 md:grid-cols-3">
+          {STEPS.map(([Icon, title, body, bg], i) => (
+            <m.li key={title} variants={fadeUp} className={cn('flex flex-col gap-6 rounded-bento p-6 text-pastel-ink md:p-8', bg)}>
+              <div className="flex items-center justify-between">
+                <span className="flex size-12 items-center justify-center rounded-modal bg-white">
+                  <Icon className="size-6" aria-hidden />
+                </span>
+                <span className="text-5xl font-bold text-black/20">0{i + 1}</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-2xl font-bold tracking-tight">{title}</h3>
+                <p className="text-sm text-black/70">{body}</p>
+              </div>
             </m.li>
           ))}
-        </m.ul>
+        </m.ol>
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// 8. Proof: the maths at full scale
-// ---------------------------------------------------------------------------
-function Proof() {
-  const at = calculateTargetTotals()
-  const numbers = [
-    { value: at.users, fmt: formatCompactNumber, label: 'members at full scale' },
-    { value: at.monthlyPool, fmt: formatCompactINR, label: 'pooled every month' },
-    { value: at.monthlyRescueCapacity, fmt: formatNumber, label: 'families rescued monthly' },
-  ]
-  return (
-    <section className="border-y border-border/60 py-16" aria-labelledby="proof-title">
-      <div className="container grid items-center gap-8 lg:grid-cols-[1fr_2fr]">
-        <m.div {...reveal} variants={fadeUp} className="flex flex-col gap-2">
-          <Eyebrow>built for 25 lakh members</Eyebrow>
-          <Display id="proof-title" className="text-5xl">
-            the maths
-            <br />
-            writes itself.
-          </Display>
-        </m.div>
-        <m.dl {...reveal} variants={staggerContainer(0.1)} className="grid gap-6 sm:grid-cols-3">
-          {numbers.map((n) => (
-            <m.div key={n.label} variants={fadeUp} className="flex flex-col gap-1">
-              <dd className="order-1">
-                <SpringCounter value={n.value} format={n.fmt} className="whitespace-nowrap font-display text-4xl font-semibold tabular md:text-5xl" />
-              </dd>
-              <dt className="order-2 text-xs uppercase tracking-wider text-muted-foreground">{n.label}</dt>
-            </m.div>
-          ))}
-        </m.dl>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 9. Door of light: opens wider as you scroll
-// ---------------------------------------------------------------------------
-function Door() {
-  const ref = useRef<HTMLElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
-  const scaleX = useTransform(scrollYProgress, [0, 1], [reduce ? 1 : 0.2, 1])
-  const glow = useTransform(scrollYProgress, [0, 1], [0.2, 1])
-
-  return (
-    <section ref={ref} className="relative overflow-hidden py-16" aria-labelledby="door-title">
-      <div className="container grid items-center gap-12 md:grid-cols-2">
-        <div aria-hidden className="relative flex h-[420px] justify-center md:h-[520px]">
-          <m.div style={{ opacity: glow }} className="absolute inset-y-0 left-1/2 w-full -translate-x-1/2 bg-[radial-gradient(40%_50%_at_50%_50%,rgb(255_183_3/0.35),transparent)]" />
-          <m.div
-            style={{ scaleX }}
-            className="relative h-full w-24 rounded-t-card bg-gradient-to-b from-white via-secondary-100 to-secondary shadow-[0_0_120px_40px_rgb(255_183_3/0.45)]"
-          />
-          <div className="absolute bottom-0 left-1/2 h-6 w-3/4 -translate-x-1/2 rounded-pill bg-secondary/30 blur-xl" />
-        </div>
-        <m.div {...reveal} variants={staggerContainer(0.1)} className="flex flex-col gap-4">
-          <m.div variants={fadeUp}>
-            <Display id="door-title" className="text-6xl">
-              not everyone
-              <br />
-              gets it.
-            </Display>
-          </m.div>
-          <m.p variants={fadeUp} className="max-w-md text-muted-foreground">
-            Membership is for borrowers with a verified education or home loan. Once you are in, 999 others and our CSR partners pay your loan down
-            with you, every single month.
-          </m.p>
-          <m.div variants={fadeUp}>
-            <Button asChild size="lg" variant="glow" className="rounded-pill">
-              <Link to="/onboard">
-                Check if you qualify <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          </m.div>
-        </m.div>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// 10. FAQs
+// 4. FAQs
 // ---------------------------------------------------------------------------
 const FAQS: [string, string][] = [
-  ['Is there a wallet?', 'No. Every rupee is paid directly into your bank loan account, and every payment carries a UTR you can check with your bank.'],
+  ['Is there a wallet?', 'No. Every rupee is paid directly into your bank loan account, and every payment carries a UTR you can check in the app.'],
   [
     'How much do I contribute?',
     `${formatINR(edu.borrowerContributionPerUser)} a month for an education loan and ${formatINR(home.borrowerContributionPerUser)} for a home loan, collected by Razorpay eMandate.`,
   ],
-  [
-    'How much goes into my loan?',
-    `${formatINR(edu.regularPerUser)} a month for education members and ${formatINR(home.regularPerUser)} for home members, on top of your normal EMI.`,
-  ],
+  ['How much goes into my loan?', `${formatINR(edu.regularPerUser)} a month for education members and ${formatINR(home.regularPerUser)} for home members, on top of your normal EMI.`],
   [
     'What is a rescue?',
-    `80% of CSR money in each block clears members' loans that face auction or default: ${edu.rescueCapacity} students or ${home.rescueCapacity} homes per block, every month.`,
+    `80% of CSR money clears members' loans that face auction or default. At full scale that is ${formatNumber(houses)} homes and ${formatNumber(students)} students every month.`,
   ],
-  ['How is my data protected?', 'Loan account numbers are encrypted with AES-256, we keep only the last 4 digits of Aadhaar, and changing bank details or paying out needs OTP plus two-factor verification.'],
-  ['Who can join?', 'Anyone with an education or home loan from a bank that we can verify. Your block appears on the dashboard once verification is done.'],
+  [
+    'How is my data protected?',
+    'Loan account numbers are encrypted with AES-256, we keep only the last 4 digits of Aadhaar, and changing bank details needs Face ID plus two-factor verification.',
+  ],
+  ['Who can join?', 'Anyone with an education or home loan from a bank that we can verify. Your block appears in the app once verification is done.'],
 ]
 
 function Faq() {
   return (
     <section id="faq" className="scroll-mt-16 py-16" aria-labelledby="faq-title">
-      <div className="container flex max-w-3xl flex-col gap-8">
-        <m.div {...reveal} variants={fadeUp}>
-          <Display id="faq-title" className="text-5xl">
-            questions,
-            <br />
-            answered.
-          </Display>
-        </m.div>
-        <m.div {...reveal} variants={fadeUp}>
+      <div className="container grid gap-8 lg:grid-cols-3">
+        <SectionTitle eyebrow="faq" title="Questions, answered." id="faq-title" />
+        <m.div {...reveal} variants={fadeUp} className="rounded-bento border border-border bg-card px-6 md:px-8 lg:col-span-2">
           <Accordion type="single" collapsible>
             {FAQS.map(([q, a]) => (
-              <AccordionItem key={q} value={q}>
+              <AccordionItem key={q} value={q} className="last:border-b-0">
                 <AccordionTrigger className="text-lg">{q}</AccordionTrigger>
                 <AccordionContent>{a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
+        </m.div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 5. Get the app
+// ---------------------------------------------------------------------------
+function GetApp() {
+  return (
+    <section className="pb-16" aria-labelledby="get-title">
+      <div className="container">
+        <m.div {...reveal} variants={fadeUp} className="relative isolate flex flex-col items-start gap-6 overflow-hidden rounded-bento bg-black p-8 text-white md:p-16">
+          <Topography />
+          <FloatingShapes className="opacity-80" />
+          <h2 id="get-title" className="relative max-w-2xl text-6xl font-bold tracking-tight">
+            Not everyone gets it.
+          </h2>
+          <p className="relative max-w-md text-white/70">
+            Membership is for borrowers with a verified education or home loan. Once you are in, 999 others and our CSR partners pay your loan down
+            with you.
+          </p>
+          <div className="relative flex flex-col items-start gap-6">
+            <GetStarted />
+            <StoreBadges />
+          </div>
         </m.div>
       </div>
     </section>
