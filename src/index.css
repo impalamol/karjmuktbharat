@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  html,
+  body {
+    /* No horizontal scroll bug, ever. */
+    overflow-x: clip;
+    max-width: 100%;
+  }
+  body {
+    @apply min-h-dvh bg-background font-sans text-base text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  html[lang='mr'] body {
+    @apply font-devanagari;
+  }
+  * {
+    @apply border-border;
+    min-width: 0;
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .pb-bottom-nav {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}

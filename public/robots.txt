@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /bank
+Disallow: /admin
+Disallow: /api/
